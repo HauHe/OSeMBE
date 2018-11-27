@@ -26,8 +26,6 @@ variables = ['AnnualEmissions', 'AnnualTechnologyEmission', 'ProductionByTechnol
 #%% Read the data from txt results file
 
 data = pd.read_csv(results_file, names=['Year']) # The variable results_file needs to be defined in the batch file
-# C:\Users\haukeh\PycharmProjects\OSeMBEtoREEEMdb\OSeMBE_sol_E0_sorted.txt
-# /Users/cotti/Box/OSeMBE_results/OSeMBE_sol_E0_sorted.txt
 
 # Edditing raw data dataframe 
 data = pd.DataFrame(data.Year.str.split('\t', 2).tolist(), columns = ['Parameter', 'Region', 'rest'])
@@ -143,10 +141,6 @@ def ElProdByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
     for tech, nam, age, siz in zip(TechAbre,TechNam,Age,Size):
         if not (age and siz):
             AnnualTechProd = Country.loc[(Country.TechFuel==FuAbr) & (Country.TechTech==tech)]
-#        if not siz:
- #           AnnualTechProd = Country.loc[(Country.TechFuel==FuAbr) & (Country.TechTech==tech) & (Country.TechAge==age)]
-  #      if not age:
-   #         AnnualTechProd = Country.loc[(Country.TechFuel==FuAbr) & (Country.TechTech==tech) & (Country.TechSize==siz)]
         else:
             AnnualTechProd = Country.loc[(Country.TechFuel==FuAbr) & (Country.TechTech==tech) & (Country.TechAge==age) & (Country.TechSize==siz)]
 
@@ -171,12 +165,6 @@ def ElProdByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
 #%% Function to calculate the annual fuel input per technology
 
 def FuIntoTe(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
-#    FuAbr = 'NG'
- #   FuNam = 'Natural gas / non renew.'
-  #  TechAbre = ['CC','CH','CH','FC','GC','GC','HP','HP','ST']
-   # TechNam = ['Combined Cycle','CHP old','CHP new','Fuel cell','Gas Turbine old','Gas Turbine new','Heat and Power Unit small','Heat and Power Unit large','Steam Turbine']
-    #Age = ['H','H','N','H','H','N','H','H','H']
-    #Size = ['2','3','3','1','2','2','1','2','2']
     global ID
     ID += 1
     FueAndTechs = [FuNam]
@@ -186,16 +174,8 @@ def FuIntoTe(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
     for tech, nam, age, siz in zip(TechAbre,TechNam,Age,Size):
         if not (age and siz):
             AnnualFuUs = FuelUse.loc[(FuelUse.TechFuel==FuAbr) & (FuelUse.TechTech==tech)]
-            #print(AnnualFuUs)
-#        if siz=='':
- #           AnnualFuUs = FuelUse.loc[(FuelUse.TechFuel==FuAbr) & (FuelUse.TechTech==tech) & (FuelUse.TechAge==age)]
-  #          #print(AnnualFuUs)
-   #     if age=='':
-    #        AnnualFuUs = FuelUse.loc[(FuelUse.TechFuel==FuAbr) & (FuelUse.TechTech==tech) & (FuelUse.TechSize==siz)]
-            #print(AnnualFuUs)
         else:
             AnnualFuUs = FuelUse.loc[(FuelUse.TechFuel==FuAbr) & (FuelUse.TechTech==tech) & (FuelUse.TechAge==age) & (FuelUse.TechSize==siz)]
-            #print(AnnualFuUs)
 
         FuUs.set_value(FuUs.index, 'Unit', 'PJ')
         for yr in years:
@@ -298,7 +278,7 @@ def ElExCap(Countr):
          
     return ExCa
 
-#%% Fucntion to determine the national Emissions
+#%% Function to determine the national Emissions
     
 def NatEmi(Countr):
     global ID
@@ -713,11 +693,6 @@ for count in country_dict_list:
 #%% Creating "Tables" sheet/dictionary
 
 file_dict['Tables'] = TableOfContent
-
-#%% Creating a dict with the IDs of the tables
-
-#table_IDs = {}
-#table_IDs['Biomass production'] = pd.Series(file_dict[country_dict_list[0]]['Biomass production']['ID'])
 
 #%% Creating the sheet "EU28+CH+NO"
 file_dict['EU28+CH+NO'] = file_dict[country_dict_list[0]].copy()
