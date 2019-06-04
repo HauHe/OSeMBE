@@ -9,16 +9,28 @@ import sys
 print('Python version ' + sys.version)
 print('Pandas version ' + pd.__version__)
 
-#%% Get input on run specifics of the data
-results_file = 'OSeMBE_V1_sol_E0_sorted.txt'
+#%% Get inout for manual runs
+results_file = 'OSeMBE_V199_sol_C0T0E0_sorted.txt'
+TransmissionScen = int(0)
+EmissionScen = int(0)
+
+#%% Get input on run specifics of the data from command prompt
+#Input = sys.argv[1:]
+#print(Input)
+#results_file = Input[0]
+#TransmissionScen = Input[1]
+#TransmissionScen = int(TransmissionScen)
+#EmissionScen = Input[2]
+#EmissionScen = int(EmissionScen)
+#%%Generate Metadata
 name_details_results_file = results_file.split('_')
 scenario = name_details_results_file[3] 
-date = datetime.date.today().strftime("%Y%m%d") 
-pathway = 'Base' 
+date = datetime.date.today().strftime("%Y-%m-%d") 
+pathway = 'C0T%iE%s' % (TransmissionScen, EmissionScen)
 model = 'OSeMBE' 
 framework = 'FrameworkNA' 
 version = 'Data'+name_details_results_file[1] 
-inputoutput = 'O' 
+inputoutput = 'Output' 
 
 #%% Definition needed results variables
 variables = ['AnnualEmissions', 'AnnualTechnologyEmission', 'ProductionByTechnologyAnnual', 'TotalCapacityAnnual', 'UseByTechnologyAnnual']
@@ -104,10 +116,6 @@ def InstalledCapByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
     for tech, nam, age, siz in zip(TechAbre,TechNam,Age,Size):
         if not (age and siz):
             AnnualTechCaps = CountryCaps.loc[(CountryCaps.TechFuel==FuAbr) & (CountryCaps.TechTech==tech)]
-        if not siz:
-            AnnualTechCaps = CountryCaps.loc[(CountryCaps.TechFuel==FuAbr) & (CountryCaps.TechTech==tech) & (CountryCaps.TechAge==age)]
-        if not age:
-            AnnualTechCaps = CountryCaps.loc[(CountryCaps.TechFuel==FuAbr) & (CountryCaps.TechTech==tech) & (CountryCaps.TechSize==siz)]
         else:
             AnnualTechCaps = CountryCaps.loc[(CountryCaps.TechFuel==FuAbr) & (CountryCaps.TechTech==tech) & (CountryCaps.TechAge==age) & (CountryCaps.TechSize==siz)]
 
@@ -144,7 +152,7 @@ def ElProdByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
         else:
             AnnualTechProd = Country.loc[(Country.TechFuel==FuAbr) & (Country.TechTech==tech) & (Country.TechAge==age) & (Country.TechSize==siz)]
 
-        ElProd.set_value(ElProd.index, 'Unit', 'GW')
+        ElProd.set_value(ElProd.index, 'Unit', 'PJ')
         for yr in years:
             value = AnnualTechProd[yr].sum()
             ElProd.set_value(nam, yr, value)
@@ -530,7 +538,7 @@ for count in country_dict_list:
     file_dict[count]['Primary energy consumption of renewables'].set_value('Wind', 'Aggregation', 'f')
     ID += 1
     # Geothermal
-    Country_Geo = Country.loc[(Country.TechFuel=='GO')]
+    Country_Geo = Country.loc[(Country.TechFuel=='GO') & (Country.ComFuel=='GO')]
     file_dict[count]['Primary energy consumption of renewables'].set_value(file_dict[count]['Primary energy consumption of renewables'].index, 'Unit', 'PJ')
     for yr in years:
         value = Country_Geo[yr].sum()
@@ -540,7 +548,7 @@ for count in country_dict_list:
     file_dict[count]['Primary energy consumption of renewables'].set_value('Geothermal', 'Aggregation', 'f')
     ID += 1
     # Biomass
-    Country_BioM = Country.loc[(Country.TechFuel=='BM')]
+    Country_BioM = Country.loc[(Country.TechFuel=='BM') & (Country.ComFuel=='BM')]
     file_dict[count]['Primary energy consumption of renewables'].set_value(file_dict[count]['Primary energy consumption of renewables'].index, 'Unit', 'PJ')
     for yr in years:
         value = Country_BioM[yr].sum()
@@ -550,7 +558,7 @@ for count in country_dict_list:
     file_dict[count]['Primary energy consumption of renewables'].set_value('Biomass', 'Aggregation', 'f')
     ID += 1
     # Biofuel
-    Country_BioF = Country.loc[(Country.TechFuel=='BF')]
+    Country_BioF = Country.loc[(Country.TechFuel=='BF')& (Country.ComFuel=='BF')]
     file_dict[count]['Primary energy consumption of renewables'].set_value(file_dict[count]['Primary energy consumption of renewables'].index, 'Unit', 'PJ')
     for yr in years:
         value = Country_BioF[yr].sum()
@@ -560,7 +568,7 @@ for count in country_dict_list:
     file_dict[count]['Primary energy consumption of renewables'].set_value('Biofuel', 'Aggregation', 'f')
     ID += 1
     # Sum
-    Country_Sum = Country.loc[(Country.TechFuel=='BF')|(Country.TechFuel=='BM')|(Country.TechFuel=='GO')|(Country.TechFuel=='WI')|(Country.TechFuel=='SO')|(Country.TechFuel=='OC')|(Country.TechFuel=='HY')]
+    Country_Sum = Country.loc[((Country.TechFuel=='BF') & (Country.ComFuel=='BF'))|((Country.TechFuel=='BM') & (Country.ComFuel=='BM'))|((Country.TechFuel=='GO') & (Country.ComFuel=='GO'))|(Country.TechFuel=='WI')|(Country.TechFuel=='SO')|(Country.TechFuel=='OC')|(Country.TechFuel=='HY')]
     file_dict[count]['Primary energy consumption of renewables'].set_value(file_dict[count]['Primary energy consumption of renewables'].index, 'Unit', 'PJ')
     for yr in years:
         value = Country_Sum[yr].sum()
@@ -595,8 +603,8 @@ for count in country_dict_list:
     # Nuclear
     NuTechAbr = ['G2','G3']
     NuTechNam = ['Generation 2','Generation 3']
-    NuAge = ['H','N']
-    NuSize = ['3','3']
+    NuAge = ['','']
+    NuSize = ['','']
     # Waste non renewable
     WsTechAbr = ['CH','ST']
     WsTechNam = ['CHP','Steam Turbine']
@@ -709,12 +717,12 @@ file_dict['EU28+CH+NO']['Electricity Exchange - Net Imports'].loc['Total net Imp
 for table in ['Electricity Exchange - Capacities','Emissions','Biomass production']:
     file_dict['EU28+CH+NO'][table].loc[:,'ID'] = file_dict['EU28+CH+NO'][table].loc[:,'ID']-1
 #%% 
-filename = date
-filename += str('_'+pathway+'_'+model+'_'+framework+'_'+version+'_'+inputoutput+'.xlsx')
+xlsxName = date
+xlsxName += str('_'+pathway+'_'+model+'_'+framework+'_'+version+'_'+inputoutput+'.xlsx')
 
 #%% Write excel file
 
-writer = pd.ExcelWriter(filename, engine='xlsxwriter')
+writer = pd.ExcelWriter(xlsxName, engine='xlsxwriter')
 dfs = TableOfContent[2:12].reset_index(drop=True)
 col_headers = pd.DataFrame(['Unit','2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050','ID','Category','Aggregation']).T
 
