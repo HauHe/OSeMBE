@@ -10,7 +10,7 @@ print('Python version ' + sys.version)
 print('Pandas version ' + pd.__version__)
 
 #%% Get inout for manual runs
-results_file = 'OSeMBE_V199_sol_C0T0E0_sorted.txt'
+results_file = 'OSeMBE_V2_sol_C0T0E0_sorted.txt'
 TransmissionScen = int(0)
 EmissionScen = int(0)
 
@@ -33,7 +33,7 @@ version = 'Data'+name_details_results_file[1]
 inputoutput = 'Output' 
 
 #%% Definition needed results variables
-variables = ['AnnualEmissions', 'AnnualTechnologyEmission', 'ProductionByTechnologyAnnual', 'TotalCapacityAnnual', 'UseByTechnologyAnnual']
+variables = ['AnnualEmissions', 'AnnualTechnologyEmission', 'ProductionByTechnologyAnnual', 'TotalCapacityAnnual', 'UseByTechnologyAnnual','NewCapacity']
 
 #%% Read the data from txt results file
 
@@ -74,6 +74,15 @@ for i in variables:
         df['TechTech'] = df['Technology'].apply(lambda x: x[4:6])
         df['TechAge'] = df['Technology'].apply(lambda x: x[7:8])
         df['TechSize'] = df['Technology'].apply(lambda x: x[8:])
+    elif i == 'NewCapacity':
+        df.columns = ['Technology', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050', '2051', '2052', '2053', '2054', '2055', '2056', '2057', '2058', '2059', '2060']
+        cols = df.columns.drop('Technology')
+        df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
+        df['TechCountry'] = df['Technology'].apply(lambda x: x[:2])
+        df['TechFuel'] = df['Technology'].apply(lambda x: x[2:4])
+        df['TechTech'] = df['Technology'].apply(lambda x: x[4:6])
+        df['TechAge'] = df['Technology'].apply(lambda x: x[7:8])
+        df['TechSize'] = df['Technology'].apply(lambda x: x[8:])
     else:
         df.columns = ['Technology', 'Commodity', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050', '2051', '2052', '2053', '2054', '2055', '2056', '2057', '2058', '2059', '2060']
         cols = df.columns.drop(['Technology','Commodity'])
@@ -90,7 +99,7 @@ for i in variables:
 
 #%% Creating dictionary for excel file
 file_dict = {}
-TableOfContent = pd.Series(['List of tables','','Final energy consumption by energy carrier sum of all sectors','Primary energy consumption','Primary energy consumption of renewables','Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology','Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology','Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology','Electricity Exchange - Net Imports','Electricity Exchange - Capacities','Emissions','Biomass production'])
+TableOfContent = pd.Series(['List of tables','','Final energy consumption by energy carrier sum of all sectors','Primary energy consumption','Primary energy consumption of renewables','Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology','Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology','Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology','Electricity Exchange - Net Imports','Electricity Exchange - Capacities','Emissions','Biomass production','New Capacity'])
 #%%
 df = variables_dict['AnnualTechnologyEmission']
 country_series = pd.Series(df.TechCountry.unique())
@@ -321,7 +330,45 @@ def NatBMpro(Countr):
     
     return NatBM
 
-#%%Iteration country by country (sheet by sheet)
+#%% Function to determine the New Capacity installed per year
+def NewCapByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
+    global ID
+#    FuAbr = "BM"
+#    FuNam = "Biomass"
+#    TechAbre = ["CH"]
+#    TechNam = ["CHP"]
+#    Age = ["H"]
+#    Size = ["3"]
+    ID += 1
+    FueAndTechs = [FuNam]
+    FueAndTechs.extend(TechNam)
+    NewCap = pd.DataFrame(index=FueAndTechs, columns=['Unit','2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050','ID','Category','Aggregation'])
+    Category = ('New Capacity_'+FuNam)
+    for tech, nam, age, siz in zip(TechAbre,TechNam,Age,Size):
+        if not (age and siz):
+            AnnualTechCaps = NewCaps.loc[(NewCaps.TechFuel==FuAbr) & (NewCaps.TechTech==tech)]
+        else:
+            AnnualTechCaps = NewCaps.loc[(NewCaps.TechFuel==FuAbr) & (NewCaps.TechTech==tech) & (NewCaps.TechAge==age) & (NewCaps.TechSize==siz)]
+
+        NewCap.set_value(NewCap.index, 'Unit', 'GW')
+        for yr in years:
+            value = AnnualTechCaps[yr].sum()
+            NewCap.set_value(nam, yr, value)
+        NewCap.set_value(nam, 'ID', ID)
+        NewCap.set_value(nam, 'Category', Category)
+        NewCap.set_value(nam, 'Aggregation', 'f')
+        ID += 1
+    for yr in years:
+        val = NewCap[yr].sum()
+        NewCap.set_value(FuNam, yr, val)
+    FuelID = ID - len(TechNam)-1
+    NewCap.set_value(FuNam, 'ID', FuelID)
+    NewCap.set_value(FuNam, 'Category', Category)
+    NewCap.set_value(FuNam, 'Aggregation', 't')
+    
+    return NewCap
+
+#%% Iteration country by country (sheet by sheet)
 c = 0 #country number
 for count in country_dict_list:
     ID = 1    
@@ -335,6 +382,7 @@ for count in country_dict_list:
     TotalTransBorder = TransBorder1
     TotalTransBorder = TotalTransBorder.append(TransBorder2)
     CountryCaps = variables_dict['TotalCapacityAnnual'].loc[(variables_dict['TotalCapacityAnnual'].TechCountry==country_series[c])]
+    NewCaps = variables_dict['NewCapacity'].loc[(variables_dict['NewCapacity'].TechCountry==country_series[c])]
     FuelUse = variables_dict['UseByTechnologyAnnual'].loc[(variables_dict['UseByTechnologyAnnual'].TechCountry==country_series[c]) & (variables_dict['UseByTechnologyAnnual'].ComCountry==country_series[c])]
     
     file_dict[count]['Final energy consumption by energy carrier sum of all sectors'] = pd.DataFrame(index=['Coal','Petroleum products','Gas','Renewables','Waste','Others (Methanol, Hydrogen, DME)','Sum'], columns=['Unit','2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050','ID','Category','Aggregation'])
@@ -695,6 +743,11 @@ for count in country_dict_list:
     NatiBMprod = NatBMpro(count)
     file_dict[count]['Biomass production'] = file_dict[count]['Biomass production'].append(NatiBMprod)
     
+#%% New Capacities
+    file_dict[count]['New Capacity'] = pd.DataFrame(index=[],columns=['Unit','2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050','ID','Category','Aggregation'])    
+    for fuabr,funam, techabr, technam, techage, techsize in zip(ListOfFuAbr,ListOfFuNam,ListOfTechAbrByFu,ListOfTechNamByFu,ListOfTechAge,ListOfTechSiz):
+        Caps = NewCapByFandT(fuabr,funam,techabr,technam,techage,techsize)
+        file_dict[count]['New Capacity'] = file_dict[count]['New Capacity'].append(Caps)
 #%%
     c += 1
     
@@ -723,7 +776,7 @@ xlsxName += str('_'+pathway+'_'+model+'_'+framework+'_'+version+'_'+inputoutput+
 #%% Write excel file
 
 writer = pd.ExcelWriter(xlsxName, engine='xlsxwriter')
-dfs = TableOfContent[2:12].reset_index(drop=True)
+dfs = TableOfContent[2:13].reset_index(drop=True)
 col_headers = pd.DataFrame(['Unit','2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050','ID','Category','Aggregation']).T
 
 file_dict['Tables'].to_excel(writer, sheet_name='Tables', header=False, index=False)
