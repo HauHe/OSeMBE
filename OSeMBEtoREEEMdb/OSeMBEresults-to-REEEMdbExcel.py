@@ -767,8 +767,6 @@ for table in TableOfContent[2:]:
     file_dict['EU28+CH+NO'][table].loc[:,'Aggregation'] = 't'
 file_dict['EU28+CH+NO']['Electricity Exchange - Net Imports'].loc[:,['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050']] = file_dict['EU28+CH+NO']['Electricity Exchange - Net Imports'].loc[:,['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050']] * (-1)
 file_dict['EU28+CH+NO']['Electricity Exchange - Net Imports'].loc['Total net Imports',['Unit','2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050','ID','Category','Aggregation']] = np.NaN
-for table in ['Electricity Exchange - Capacities','Emissions','Biomass production']:
-    file_dict['EU28+CH+NO'][table].loc[:,'ID'] = file_dict['EU28+CH+NO'][table].loc[:,'ID']-1
 #%% 
 xlsxName = date
 xlsxName += str('_'+pathway+'_'+model+'_'+framework+'_'+version+'_'+inputoutput+'.xlsx')
