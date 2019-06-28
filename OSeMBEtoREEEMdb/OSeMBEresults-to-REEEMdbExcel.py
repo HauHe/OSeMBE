@@ -10,28 +10,41 @@ print('Python version ' + sys.version)
 print('Pandas version ' + pd.__version__)
 
 #%% Get inout for manual runs
-results_file = 'OSeMBE_V2_sol_C0T0E0_sorted.txt'
-TransmissionScen = int(0)
-EmissionScen = int(0)
+#results_file = 'OSeMBE_V2_sol_C0T0E0_sorted.txt'
 
 #%% Get input on run specifics of the data from command prompt
-#Input = sys.argv[1:]
-#print(Input)
-#results_file = Input[0]
-#TransmissionScen = Input[1]
-#TransmissionScen = int(TransmissionScen)
-#EmissionScen = Input[2]
-#EmissionScen = int(EmissionScen)
+Input = sys.argv[1:]
+print(Input)
+results_file = Input[0]
+
 #%%Generate Metadata
 name_details_results_file = results_file.split('_')
 scenario = name_details_results_file[3] 
 date = datetime.date.today().strftime("%Y-%m-%d") 
-pathway = 'C0T%iE%s' % (TransmissionScen, EmissionScen)
+#pathway = 'C%iT%iE%s' % (REcostScen, TransmissionScen, EmissionScen)
+pathway = name_details_results_file[3]
 model = 'OSeMBE' 
 framework = 'FrameworkNA' 
-version = 'Data'+name_details_results_file[1] 
+version = 'DataV1R1' 
 inputoutput = 'Output' 
 
+#%%
+if len(pathway)==6:
+    scenarios =  [pathway[i:i+1] for i in range(1, len(pathway), 2)]
+    REcostScen = scenarios[0]
+    REcostScen = int(REcostScen)
+    TransmissionScen = scenarios[1]
+    TransmissionScen = int(TransmissionScen)
+    EmissionScen = scenarios[2]
+    EmissionScen = int(EmissionScen)
+else:
+    scenarios =  [pathway[i:i+1] for i in range(1, len(pathway), 2)]
+    REcostScen = scenarios[0]
+    REcostScen = int(REcostScen)
+    TransmissionScen = scenarios[1]
+    TransmissionScen = int(TransmissionScen)
+    EmissionScen = pathway[-2:]
+    EmissionScen = int(EmissionScen)
 #%% Definition needed results variables
 variables = ['AnnualEmissions', 'AnnualTechnologyEmission', 'ProductionByTechnologyAnnual', 'TotalCapacityAnnual', 'UseByTechnologyAnnual','NewCapacity']
 
