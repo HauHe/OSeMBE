@@ -17,34 +17,54 @@ print('Python version ' + sys.version)
 print('Pandas version ' + pd.__version__)
 
 #%% Get input from comand prompt/batch run
-Input = sys.argv[1:]
-#Input = ['OSeMBE_V1_C0T0E1_data.txt', 0, 0, 1]
+#Input = sys.argv[1:]
+Input = ['OSeMBE_V2_C0T0E0_data.txt']
 print(Input)
 ddFileName = Input[0]
-RECapCoScen = Input[1]
-RECapCoScen = int(RECapCoScen)
-TransmissionScen = Input[2]
-TransmissionScen = int(TransmissionScen)
-EmissionScen = Input[3]
-EmissionScen = int(EmissionScen)
 name_details_dd_file = ddFileName.split('_')
 pathway = name_details_dd_file[2] 
 date = datetime.date.today().strftime("%Y-%m-%d") 
-pathway = 'C%iT%iE%s' % (RECapCoScen, TransmissionScen, EmissionScen)
 model = 'OSeMBE' 
 framework = 'FrameworkNA' 
-version = 'Data'+name_details_dd_file[1] 
+version = 'DataV1R1' 
 inputoutput = 'Input'
-#%% Definition of to be used file and naming details -- to be changed later
+#%%
+#if len(pathway)==6:
+#    scenarios =  [pathway[i:i+1] for i in range(1, len(pathway), 2)]
+#    RECapCoScen = scenarios[0]
+#    RECapCoScen = int(RECapCoScen)
+#    TransmissionScen = scenarios[1]
+#    TransmissionScen = int(TransmissionScen)
+#    EmissionScen = scenarios[2]
+#    EmissionScen = int(EmissionScen)
+#else:
+#    scenarios =  [pathway[i:i+1] for i in range(1, len(pathway), 2)]
+#    RECapCoScen = scenarios[0]
+#    RECapCoScen = int(RECapCoScen)
+#    TransmissionScen = scenarios[1]
+#    TransmissionScen = int(TransmissionScen)
+#    EmissionScen = pathway[-2:]
+#    EmissionScen = int(EmissionScen)
+#%% Function to insert row in the dataframe 
+def Insert_row_(row_number, df, row_value): 
+	# Slice the upper half of the dataframe 
+	df1 = df[0:row_number] 
 
-#ddFileName = "OSeMBE_V1_C0T0E0_data.txt"
-#ddFileInfo = ddFileName.split("_")
-#pathway = ddFileInfo[2]
-#date = datetime.date.today().strftime("%Y-%m-%d")
-#model = 'OSeMBE'
-#framework = 'FrameworkNA'
-#version = 'Data'+ddFileInfo[1]
-#inputoutput = 'Input'
+	# Store the result of lower half of the dataframe 
+	df2 = df[row_number:] 
+
+	# Inser the row in the upper half dataframe 
+	df1.loc[row_number]=row_value 
+
+	# Concat the two dataframes 
+	df_result = pd.concat([df1, df2]) 
+
+	# Reassign the index labels 
+#	df_result.index = [*range(df_result.shape[0])] 
+
+	# Return the updated dataframe 
+	return df_result 
+
 #%% Import data input file
 
 #inputData = pd.read_table(ddFileName)
@@ -132,6 +152,7 @@ for d in FourDParam:
     allParamDic[d].columns = columnHeader
     allParamDic[d] = allParamDic[d].drop(allParamDic[d].index[[0]])
     allParamDic[d] = allParamDic[d][allParamDic[d]["0"] != '2015']
+    allParamDic[d] = allParamDic[d][allParamDic[d]["0"] != '2']
     df = allParamDic[d].iloc[0::2, :]
     df = df.iloc[:,:1]
     df = df['0'].str.split(',',n=-1,expand = True)
@@ -149,13 +170,28 @@ for d in FiveDParam:
     allParamDic[d].columns = columnHeader
     allParamDic[d] = allParamDic[d].drop(allParamDic[d].index[[0]])
     allParamDic[d] = allParamDic[d][allParamDic[d]["0"] != '2015']
-    df = allParamDic[d].iloc[0::2, :]
+#    allParamDic[d] = allParamDic[d].reset_index(drop = True)
+    TwoModPP = list()
+    if d != 'InputActivityRatio':
+        for i in range(len(allParamDic[d])):
+            if (len(allParamDic[d].iloc[i,0])==1) & (len(allParamDic[d].iloc[i-1,0])==1):
+                if (int(allParamDic[d].iloc[i,0]) + int(allParamDic[d].iloc[i-1,0])==3):
+                    TwoModPP.append(allParamDic[d].iloc[i-2,:1]) 
+#                    allParamDic[d] = Insert_row_(i-2,allParamDic[d],allParamDic[d].iloc[i-2,:])
+#                    i += 1
+#    allParamDic[d] = allParamDic[d][allParamDic[d]["0"] != '2']
+#    df = allParamDic[d].iloc[0::2, :]
+    df = allParamDic[d][(allParamDic[d]["0"] != '2')&(allParamDic[d]["0"] != '1')]
     df = df.iloc[:,:1]
+    
+    for t in range(len(TwoModPP)):
+        df = df.append(TwoModPP[t])
+    df = df.sort_values(by=['0'])
     df = df['0'].str.split(',',n=-1,expand = True)
     df = df.iloc[:,1:3]
     df = df.reset_index(drop = True)
     df.columns = ['technology', 'commodity']
-    allParamDic[d] = allParamDic[d].iloc[1::2,1:]
+    allParamDic[d] = allParamDic[d][(allParamDic[d]["0"] == '2') | (allParamDic[d]["0"] == '1')]
     allParamDic[d] = allParamDic[d].reset_index(drop = True)
     allParamDic[d] = allParamDic[d].join(df)
     allParamDic[d]['countryTech'] = allParamDic[d]["technology"].apply(lambda x: x[:2])
@@ -224,11 +260,14 @@ def CreateVarCoDf(Country):
     return outDf
 #%% Calculate the technolgy efficiencies
 def CreateEfficDf(Country):
+#    Country = 'EE'
     global availableTech
     global availableTechNames
     outDf = pd.DataFrame()
     inputActivities = allParamDic['InputActivityRatio'][(allParamDic['InputActivityRatio']['countryTech']==Country) & (allParamDic['InputActivityRatio']['countryComm']==Country)]
+    inputActivities = inputActivities.drop_duplicates('technology')
     outputActivities = allParamDic['OutputActivityRatio'][(allParamDic['OutputActivityRatio']['countryTech']==Country) & (allParamDic['OutputActivityRatio']['countryComm']==Country)]
+    outputActivities = outputActivities.drop_duplicates('technology')
     for t in availableTech:
         inCount = 0
         outCount = 0
@@ -344,7 +383,7 @@ for c in allCountries:
 for c in allCountries:
     fileDic[c]['AnnualEmissionLimit'] = pd.DataFrame(np.nan, index=['none'], columns=['unit','2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050'])
 #%% Add the DiscountRate to the EU+CH+NO dictionary
-df = allParamDic['DiscountRate'].iloc[1,1]
+df = allParamDic['DiscountRate'].iloc[0,3]
 outDf = pd.DataFrame()
 for y in yearsOfInterest:
     outDf.loc[1,y] = df
