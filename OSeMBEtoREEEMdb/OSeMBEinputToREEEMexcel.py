@@ -17,8 +17,8 @@ print('Python version ' + sys.version)
 print('Pandas version ' + pd.__version__)
 
 #%% Get input from comand prompt/batch run
-#Input = sys.argv[1:]
-Input = ['OSeMBE_V2_C0T0E0_data.txt']
+Input = sys.argv[1:]
+#Input = ['OSeMBE_V2_C0T0E1_data.txt']
 print(Input)
 ddFileName = Input[0]
 name_details_dd_file = ddFileName.split('_')
