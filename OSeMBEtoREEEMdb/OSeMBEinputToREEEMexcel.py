@@ -28,23 +28,7 @@ model = 'OSeMBE'
 framework = 'FrameworkNA' 
 version = 'DataV1R1' 
 inputoutput = 'Input'
-#%%
-#if len(pathway)==6:
-#    scenarios =  [pathway[i:i+1] for i in range(1, len(pathway), 2)]
-#    RECapCoScen = scenarios[0]
-#    RECapCoScen = int(RECapCoScen)
-#    TransmissionScen = scenarios[1]
-#    TransmissionScen = int(TransmissionScen)
-#    EmissionScen = scenarios[2]
-#    EmissionScen = int(EmissionScen)
-#else:
-#    scenarios =  [pathway[i:i+1] for i in range(1, len(pathway), 2)]
-#    RECapCoScen = scenarios[0]
-#    RECapCoScen = int(RECapCoScen)
-#    TransmissionScen = scenarios[1]
-#    TransmissionScen = int(TransmissionScen)
-#    EmissionScen = pathway[-2:]
-#    EmissionScen = int(EmissionScen)
+
 #%% Function to insert row in the dataframe 
 def Insert_row_(row_number, df, row_value): 
 	# Slice the upper half of the dataframe 
@@ -58,9 +42,6 @@ def Insert_row_(row_number, df, row_value):
 
 	# Concat the two dataframes 
 	df_result = pd.concat([df1, df2]) 
-
-	# Reassign the index labels 
-#	df_result.index = [*range(df_result.shape[0])] 
 
 	# Return the updated dataframe 
 	return df_result 
@@ -117,17 +98,14 @@ generalValidParam = ['AnnualEmissionLimit', 'DiscountRate']
 #%%Identifying the first row of every parameter in the data file
 startOfParam = inputData[inputData[0].str.contains("param")]
 startOfParam = startOfParam.index.tolist()
-
 #Creating a list of all parameter in data file
 allParam = []
 for param in startOfParam:
     allParam.append(str(inputData.iloc[param,1]))
-
 #creating a list containing dictionaries for every paramter
 allParamDic = {}
 for p in allParam:
     allParamDic[p] = {}
-
 #Filling the parameter dictionaries with the corresponding data from the inputData
 for param in range(len(allParam)):
     if param<len(allParam)-1:
@@ -170,20 +148,14 @@ for d in FiveDParam:
     allParamDic[d].columns = columnHeader
     allParamDic[d] = allParamDic[d].drop(allParamDic[d].index[[0]])
     allParamDic[d] = allParamDic[d][allParamDic[d]["0"] != '2015']
-#    allParamDic[d] = allParamDic[d].reset_index(drop = True)
     TwoModPP = list()
     if d != 'InputActivityRatio':
         for i in range(len(allParamDic[d])):
             if (len(allParamDic[d].iloc[i,0])==1) & (len(allParamDic[d].iloc[i-1,0])==1):
                 if (int(allParamDic[d].iloc[i,0]) + int(allParamDic[d].iloc[i-1,0])==3):
                     TwoModPP.append(allParamDic[d].iloc[i-2,:1]) 
-#                    allParamDic[d] = Insert_row_(i-2,allParamDic[d],allParamDic[d].iloc[i-2,:])
-#                    i += 1
-#    allParamDic[d] = allParamDic[d][allParamDic[d]["0"] != '2']
-#    df = allParamDic[d].iloc[0::2, :]
     df = allParamDic[d][(allParamDic[d]["0"] != '2')&(allParamDic[d]["0"] != '1')]
     df = df.iloc[:,:1]
-    
     for t in range(len(TwoModPP)):
         df = df.append(TwoModPP[t])
     df = df.sort_values(by=['0'])
