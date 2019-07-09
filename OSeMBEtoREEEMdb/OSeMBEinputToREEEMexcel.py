@@ -17,34 +17,18 @@ print('Python version ' + sys.version)
 print('Pandas version ' + pd.__version__)
 
 #%% Get input from comand prompt/batch run
-Input = sys.argv[1:]
-#Input = ['OSeMBE_V2_C0T0E1_data.txt']
+#Input = sys.argv[1:]
+Input = ['OSeMBE_V2.1_C0T0E10_data.txt']
 print(Input)
 ddFileName = Input[0]
 name_details_dd_file = ddFileName.split('_')
 pathway = name_details_dd_file[2] 
-date = datetime.date.today().strftime("%Y-%m-%d") 
+#date = datetime.date.today().strftime("%Y-%m-%d") 
+date = "2019-07-08"
 model = 'OSeMBE' 
 framework = 'FrameworkNA' 
 version = 'DataV1R1' 
 inputoutput = 'Input'
-
-#%% Function to insert row in the dataframe 
-def Insert_row_(row_number, df, row_value): 
-	# Slice the upper half of the dataframe 
-	df1 = df[0:row_number] 
-
-	# Store the result of lower half of the dataframe 
-	df2 = df[row_number:] 
-
-	# Inser the row in the upper half dataframe 
-	df1.loc[row_number]=row_value 
-
-	# Concat the two dataframes 
-	df_result = pd.concat([df1, df2]) 
-
-	# Return the updated dataframe 
-	return df_result 
 
 #%% Import data input file
 
@@ -77,8 +61,8 @@ yearsOfInterest = yearsOfInterest[3:39]
 yearsOfInterest = yearsOfInterest.reset_index(drop = True)
 
 #%% parameter wanted in excel file
-availableTech = ['BF00I00','BF00X00','BFHPFH1','BM00I00','BM00X00','BMCCPH1','BMCHPH3','BMSTPH3','CO00I00','CO00X00','COCHPH3','COSTPH1','COSTPH3','EL00TD0','ELDKPH1','ELFRPH1','ELLUPH1','ELNLPH1','ELNOPH1','ELPLPH1','ELSEPH1','ELXXPH1','GO00X00','GOCVPH2','HF00I00','HFCCPH2','HFCHPH3','HFGCPH3','HFGCPN3','HFHPFH1','HFHPPH2','HFSTPH2','HFSTPH3','HYDMPH0','HYDMPH1','HYDMPH2','HYDMPH3','HYDSPH2','HYDSPH3','NG00I00','NG00X00','NGCCPH2','NGCHPH3','NGCHPN3','NGFCFH1','NGGCPH2','NGGCPN2','NGHPFH1','NGHPPH2','NGSTPH2','NUG2PH3','NUG3PH3','OCWVPH1','OI00I00','OI00X00','OIRFPH0','SODIFH1','SOUTPH2','UR00I00','WIOFPH3','WIOFPN2','WIOFPN3','WIONPH3','WIONPN3','WS00X00','WSCHPH2','WSSTPH1']
-availableTechNames = ['Bio fuel Import','Bio fuel Generation','Bio fuel ICE Heat and Power unit','Biomass Import','Biomass Extraction','Biomass Combined Cycle','Biomass Combined Heat and Power','Biomass Steam Turbine','Coal Import','Coal Extraction','Coal Combined Heat and Power','Coal Steam Turbine small','Coal Steam Turbine large','Domestic Transmission and Distribution','Trans-border transmission with neighbour 1','Trans-border transmission with neighbour 2','Trans-border transmission with neighbour 3','Trans-border transmission with neighbour 4','Trans-border transmission with neighbour 5','Trans-border transmission with neighbour 6','Trans-border transmission with neighbour 7','Trans-border transmission with neighbour 8','Geothermal Extraction','Geothermal Conventional','HFO Import','HFO Combined Cycle','HFO Combined Heat and Power','HFO Gas Turbine old','HFO Gas Turbine new','HFO ICE Heat and Power unit small','HFO ICE Heat and Power Unit large','HFO Steam Turbine small','HFO Steam Turbine large','Hydro Run of river','Hydro Dam <10MW','Hydro Dam 10-100MW','Hydro Dam >100MW','Hydro Pumped Storage 10-100MW','Hydro Pumped Storage >100MW','Natural Gas Import','Natural Gas Extraction','Natural Gas Combined Cycle','Natural Gas Combined Heat and Power old','Natural Gas Combined Heat and Power new','Natural Gas Fuel Cell','Natural Gas Gas Turbine old','Natural Gas Gas Turbine new','Natural Gas ICE Heat and Power unit small','Natural Gas ICE Heat and Power Unit large','Natural Gas Steam Turbine','Nuclear Generation 2','Nuclear Generation 3','Ocean Wave','Oil Import','Oil Extraction','Oil Refinery','Solar Distributed solar PV <=0.1MW','Solar Utility solar PV >0.1MW','Uranium Import','Wind Offshore Current','Wind Offshore Near-term','Wind Offshore Long-term','Wind Onshore Current','Wind Onshore Near-term','Waste Extraction','Waste Combined Heat and Power','Waste Steam Turbine']
+availableTech = ['BF00I00','BF00X00','BFHPFH1','BM00I00','BM00X00','BMCCPH1','BMCHPH3','BMCSPN2','BMSTPH3','CO00I00','CO00X00','COCHPH3','COCSPN2','COSTPH1','COSTPH3','EL00TD0','ELDKPH1','ELFRPH1','ELLUPH1','ELNLPH1','ELNOPH1','ELPLPH1','ELSEPH1','ELXXPH1','GO00X00','GOCVPH2','HF00I00','HFCCPH2','HFCHPH3','HFGCPH3','HFGCPN3','HFHPFH1','HFHPPH2','HFSTPH2','HFSTPH3','HYDMPH0','HYDMPH1','HYDMPH2','HYDMPH3','HYDSPH2','HYDSPH3','NG00I00','NG00X00','NGCCPH2','NGCHPH3','NGCHPN3','NGCSPN2','NGFCFH1','NGGCPH2','NGGCPN2','NGHPFH1','NGHPPH2','NGSTPH2','NUG2PH3','NUG3PH3','OCWVPH1','OI00I00','OI00X00','OIRFPH0','SODIFH1','SOUTPH2','UR00I00','WIOFPH3','WIOFPN2','WIOFPN3','WIONPH3','WIONPN3','WS00X00','WSCHPH2','WSSTPH1']
+availableTechNames = ['Bio fuel Import','Bio fuel Generation','Bio fuel ICE Heat and Power unit','Biomass Import','Biomass Extraction','Biomass Combined Cycle','Biomass Combined Heat and Power','Biomass Carbon Capture and Storage','Biomass Steam Turbine','Coal Import','Coal Extraction','Coal Combined Heat and Power','Coal Carbon Capture and Storage','Coal Steam Turbine small','Coal Steam Turbine large','Domestic Transmission and Distribution','Trans-border transmission with neighbour 1','Trans-border transmission with neighbour 2','Trans-border transmission with neighbour 3','Trans-border transmission with neighbour 4','Trans-border transmission with neighbour 5','Trans-border transmission with neighbour 6','Trans-border transmission with neighbour 7','Trans-border transmission with neighbour 8','Geothermal Extraction','Geothermal Conventional','HFO Import','HFO Combined Cycle','HFO Combined Heat and Power','HFO Gas Turbine old','HFO Gas Turbine new','HFO ICE Heat and Power unit small','HFO ICE Heat and Power Unit large','HFO Steam Turbine small','HFO Steam Turbine large','Hydro Run of river','Hydro Dam <10MW','Hydro Dam 10-100MW','Hydro Dam >100MW','Hydro Pumped Storage 10-100MW','Hydro Pumped Storage >100MW','Natural Gas Import','Natural Gas Extraction','Natural Gas Combined Cycle','Natural Gas Combined Heat and Power old','Natural Gas Combined Heat and Power new','Natural Gas Carbon Capture and Storage','Natural Gas Fuel Cell','Natural Gas Gas Turbine old','Natural Gas Gas Turbine new','Natural Gas ICE Heat and Power unit small','Natural Gas ICE Heat and Power Unit large','Natural Gas Steam Turbine','Nuclear Generation 2','Nuclear Generation 3','Ocean Wave','Oil Import','Oil Extraction','Oil Refinery','Solar Distributed solar PV <=0.1MW','Solar Utility solar PV >0.1MW','Uranium Import','Wind Offshore Current','Wind Offshore Near-term','Wind Offshore Long-term','Wind Onshore Current','Wind Onshore Near-term','Waste Extraction','Waste Combined Heat and Power','Waste Steam Turbine']
 demands = ['Electricity']
 emissions = ['CO2']
 none = ['none']
@@ -394,6 +378,7 @@ for c in allSheetsForXsl:
 #%% Adding information for database to country dataframes
 for c in allCountries:
     ID = 1
+    CCS_id = 741
     for p in paramToXsl:
         if len(fileDic[c][p]) < 2:
             if p != 'SpecifiedAnnualDemand':
@@ -408,12 +393,18 @@ for c in allCountries:
                 ID += 1
         else:
             for i in availableTechNames:
+                if i not in ['Biomass Carbon Capture and Storage', 'Coal Carbon Capture and Storage', 'Natural Gas Carbon Capture and Storage']:
                     fileDic[c][p].loc[i,'id'] = ID
-                    fileDic[c][p].loc[i,'category'] = p
-                    fileDic[c][p].loc[i,'aggregation'] = 'f'
                     ID +=1
+                else:
+                    fileDic[c][p].loc[i,'id'] = CCS_id
+                    CCS_id += 1
+                fileDic[c][p].loc[i,'category'] = p
+                fileDic[c][p].loc[i,'aggregation'] = 'f'
+                
 #%% Adding information for database to EU dataframe
 ID = 1
+CCS_id = 741
 for p in paramToXsl: 
     if len(fileDic['EU+CH+NO'][p]) < 2:
         if p != 'SpecifiedAnnualDemand':
@@ -428,10 +419,14 @@ for p in paramToXsl:
             ID +=1
     else:
         for t in availableTechNames:
-            fileDic['EU+CH+NO'][p].loc[t,'id'] = ID
+            if t not in ['Biomass Carbon Capture and Storage', 'Coal Carbon Capture and Storage', 'Natural Gas Carbon Capture and Storage']:
+                fileDic['EU+CH+NO'][p].loc[t,'id'] = ID
+                ID +=1
+            else:
+                fileDic['EU+CH+NO'][p].loc[t,'id'] = CCS_id
+                CCS_id += 1
             fileDic['EU+CH+NO'][p].loc[t,'category'] = p
             fileDic['EU+CH+NO'][p].loc[t,'aggregation'] = 't'
-            ID +=1
 #%% Dataframe for Tables Sheet
 df = pd.Series(['List of tables',''])
 df = df.append(paramToXsl)
