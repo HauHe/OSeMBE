@@ -10,41 +10,23 @@ print('Python version ' + sys.version)
 print('Pandas version ' + pd.__version__)
 
 #%% Get inout for manual runs
-#results_file = 'OSeMBE_V2_sol_C0T0E0_sorted.txt'
+results_file = 'OSeMBE_V2.1_sol_C0T0E10_sorted.txt'
 
 #%% Get input on run specifics of the data from command prompt
-Input = sys.argv[1:]
-print(Input)
-results_file = Input[0]
+#Input = sys.argv[1:]
+#print(Input)
+#results_file = Input[0]
 
 #%%Generate Metadata
 name_details_results_file = results_file.split('_')
 scenario = name_details_results_file[3] 
 date = datetime.date.today().strftime("%Y-%m-%d") 
-#pathway = 'C%iT%iE%s' % (REcostScen, TransmissionScen, EmissionScen)
 pathway = name_details_results_file[3]
 model = 'OSeMBE' 
 framework = 'FrameworkNA' 
 version = 'DataV1R1' 
 inputoutput = 'Output' 
 
-#%%
-if len(pathway)==6:
-    scenarios =  [pathway[i:i+1] for i in range(1, len(pathway), 2)]
-    REcostScen = scenarios[0]
-    REcostScen = int(REcostScen)
-    TransmissionScen = scenarios[1]
-    TransmissionScen = int(TransmissionScen)
-    EmissionScen = scenarios[2]
-    EmissionScen = int(EmissionScen)
-else:
-    scenarios =  [pathway[i:i+1] for i in range(1, len(pathway), 2)]
-    REcostScen = scenarios[0]
-    REcostScen = int(REcostScen)
-    TransmissionScen = scenarios[1]
-    TransmissionScen = int(TransmissionScen)
-    EmissionScen = pathway[-2:]
-    EmissionScen = int(EmissionScen)
 #%% Definition needed results variables
 variables = ['AnnualEmissions', 'AnnualTechnologyEmission', 'ProductionByTechnologyAnnual', 'TotalCapacityAnnual', 'UseByTechnologyAnnual','NewCapacity']
 
@@ -130,6 +112,7 @@ for dic in country_dict_list:
 
 def InstalledCapByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
     global ID
+    global CCS_id
     ID += 1
     FueAndTechs = [FuNam]
     FueAndTechs.extend(TechNam)
@@ -145,14 +128,18 @@ def InstalledCapByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
         for yr in years:
             value = AnnualTechCaps[yr].sum()
             InstalledCap.set_value(nam, yr, value)
-        InstalledCap.set_value(nam, 'ID', ID)
+        if nam != 'Carbon Capture and Storage':
+            InstalledCap.set_value(nam, 'ID', ID)
+            ID += 1
+        else:
+            InstalledCap.set_value(nam, 'ID', CCS_id)
+            CCS_id += 1
         InstalledCap.set_value(nam, 'Category', Category)
         InstalledCap.set_value(nam, 'Aggregation', 'f')
-        ID += 1
     for yr in years:
         val = InstalledCap[yr].sum()
         InstalledCap.set_value(FuNam, yr, val)
-    FuelID = ID - len(TechNam)-1
+    FuelID = ID - len(TechNam)
     InstalledCap.set_value(FuNam, 'ID', FuelID)
     InstalledCap.set_value(FuNam, 'Category', Category)
     InstalledCap.set_value(FuNam, 'Aggregation', 't')
@@ -163,6 +150,7 @@ def InstalledCapByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
 
 def ElProdByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
     global ID
+    global CCS_id
     ID += 1
     FueAndTechs = [FuNam]
     FueAndTechs.extend(TechNam)
@@ -178,14 +166,18 @@ def ElProdByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
         for yr in years:
             value = AnnualTechProd[yr].sum()
             ElProd.set_value(nam, yr, value)
-        ElProd.set_value(nam, 'ID', ID)
+        if nam != 'Carbon Capture and Storage':
+            ElProd.set_value(nam, 'ID', ID)
+            ID += 1
+        else:
+            ElProd.set_value(nam, 'ID', CCS_id)
+            CCS_id += 1
         ElProd.set_value(nam, 'Category', Category)
         ElProd.set_value(nam, 'Aggregation', 'f')
-        ID += 1
     for yr in years:
         val = ElProd[yr].sum()
         ElProd.set_value(FuNam, yr, val)
-    FuelID = ID - len(TechNam)-1
+    FuelID = ID - len(TechNam)
     ElProd.set_value(FuNam, 'ID', FuelID)
     ElProd.set_value(FuNam, 'Category', Category)
     ElProd.set_value(FuNam, 'Aggregation', 't')
@@ -196,6 +188,7 @@ def ElProdByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
 
 def FuIntoTe(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
     global ID
+    global CCS_id
     ID += 1
     FueAndTechs = [FuNam]
     FueAndTechs.extend(TechNam)
@@ -211,14 +204,18 @@ def FuIntoTe(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
         for yr in years:
             value = AnnualFuUs[yr].sum()
             FuUs.set_value(nam, yr, value)
-        FuUs.set_value(nam, 'ID', ID)
+        if nam != 'Carbon Capture and Storage':
+            FuUs.set_value(nam, 'ID', ID)
+            ID += 1
+        else:
+            FuUs.set_value(nam, 'ID', CCS_id)
+            CCS_id += 1
         FuUs.set_value(nam, 'Category', Category)
         FuUs.set_value(nam, 'Aggregation', 'f')
-        ID += 1
     for yr in years:
         val = FuUs[yr].sum()
         FuUs.set_value(FuNam, yr, val)
-    FuelID = ID - len(TechNam)-1
+    FuelID = ID - len(TechNam)
     FuUs.set_value(FuNam, 'ID', FuelID)
     FuUs.set_value(FuNam, 'Category', Category)
     FuUs.set_value(FuNam, 'Aggregation', 't')
@@ -346,12 +343,7 @@ def NatBMpro(Countr):
 #%% Function to determine the New Capacity installed per year
 def NewCapByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
     global ID
-#    FuAbr = "BM"
-#    FuNam = "Biomass"
-#    TechAbre = ["CH"]
-#    TechNam = ["CHP"]
-#    Age = ["H"]
-#    Size = ["3"]
+    global CCS_id
     ID += 1
     FueAndTechs = [FuNam]
     FueAndTechs.extend(TechNam)
@@ -367,14 +359,18 @@ def NewCapByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
         for yr in years:
             value = AnnualTechCaps[yr].sum()
             NewCap.set_value(nam, yr, value)
-        NewCap.set_value(nam, 'ID', ID)
+        if nam != 'Carbon Capture and Storage':
+            NewCap.set_value(nam, 'ID', ID)
+            ID += 1
+        else:
+            NewCap.set_value(nam, 'ID', CCS_id)
+            CCS_id += 1
         NewCap.set_value(nam, 'Category', Category)
         NewCap.set_value(nam, 'Aggregation', 'f')
-        ID += 1
     for yr in years:
         val = NewCap[yr].sum()
         NewCap.set_value(FuNam, yr, val)
-    FuelID = ID - len(TechNam)-1
+    FuelID = ID - len(TechNam)
     NewCap.set_value(FuNam, 'ID', FuelID)
     NewCap.set_value(FuNam, 'Category', Category)
     NewCap.set_value(FuNam, 'Aggregation', 't')
@@ -385,7 +381,7 @@ def NewCapByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
 c = 0 #country number
 for count in country_dict_list:
     ID = 1    
-    
+    CCS_id = 295
 #%% Final energy consumption by energy carrier sum of all sectors
     
     Table = 2
@@ -647,20 +643,20 @@ for count in country_dict_list:
     ListOfFuNam = ['Coal','Oil','Natural gas / non renew.','Nuclear','Waste non renewable','Biomass solid','Biofuel liquid','Hydro','Wind','Solar','Geothermal','Ocean']
     
     # Coal
-    CoTechAbr = ['CH','ST','ST']
-    CoTechNam = ['CHP','Steam Turbine small','Steam Turbine large']
-    CoAge = ['H','H','H']
-    CoSize = ['3','1','3']
+    CoTechAbr = ['CH','CS', 'ST','ST']
+    CoTechNam = ['CHP', 'Carbon Capture and Storage', 'Steam Turbine small','Steam Turbine large']
+    CoAge = ['H','N','H','H']
+    CoSize = ['3','2','1','3']
     # Oil
     HfTechAbr = ['CC','CH','GC','GC','HP','HP','ST','ST']
     HfTechNam = ['Combined Cycle','CHP','Gas Turbine old','Gas Turbine new','Heat and Power Unit small','Heat and Power Unit large','Steam Turbine small','Steam Turbine large']
     HfAge = ['H','H','H','N','H','H','H','H']
     HfSize = ['2','3','3','3','1','2','2','3']
     # Natural gas / non renew.
-    NgTechAbr = ['CC','CH','CH','FC','GC','GC','HP','HP','ST']
-    NgTechNam = ['Combined Cycle','CHP old','CHP new','Fuel cell','Gas Turbine old','Gas Turbine new','Heat and Power Unit small','Heat and Power Unit large','Steam Turbine']
-    NgAge = ['H','H','N','H','H','N','H','H','H']
-    NgSize = ['2','3','3','1','2','2','1','2','2']
+    NgTechAbr = ['CC','CH','CH','CS','FC','GC','GC','HP','HP','ST']
+    NgTechNam = ['Combined Cycle','CHP old','CHP new','Carbon Capture and Storage','Fuel cell','Gas Turbine old','Gas Turbine new','Heat and Power Unit small','Heat and Power Unit large','Steam Turbine']
+    NgAge = ['H','H','N','N','H','H','N','H','H','H']
+    NgSize = ['2','3','3','2','1','2','2','1','2','2']
     # Nuclear
     NuTechAbr = ['G2','G3']
     NuTechNam = ['Generation 2','Generation 3']
@@ -672,10 +668,10 @@ for count in country_dict_list:
     WsAge = ['H','H']
     WsSize = ['2','1']
     # Biomass solid
-    BmTechAbr = ['CC','CH','ST']
-    BmTechNam = ['Combined Cycle','CHP','Steam Turbine']
-    BmAge = ['H','H','H']
-    BmSize = ['1','3','3']
+    BmTechAbr = ['CC','CH','CS','ST']
+    BmTechNam = ['Combined Cycle','CHP','Carbon Capture and Storage','Steam Turbine']
+    BmAge = ['H','H','N','H']
+    BmSize = ['1','3','2','3']
     # Biofuel liquid
     BfTechAbr = ['HP']
     BfTechNam = ['Heat and Power Unit']
@@ -761,6 +757,9 @@ for count in country_dict_list:
     for fuabr,funam, techabr, technam, techage, techsize in zip(ListOfFuAbr,ListOfFuNam,ListOfTechAbrByFu,ListOfTechNamByFu,ListOfTechAge,ListOfTechSiz):
         Caps = NewCapByFandT(fuabr,funam,techabr,technam,techage,techsize)
         file_dict[count]['New Capacity'] = file_dict[count]['New Capacity'].append(Caps)
+
+#%% Adding CCS
+    
 #%%
     c += 1
     
