@@ -139,7 +139,10 @@ def InstalledCapByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
     for yr in years:
         val = InstalledCap[yr].sum()
         InstalledCap.set_value(FuNam, yr, val)
-    FuelID = ID - len(TechNam)
+    if 'Carbon Capture and Storage' in TechNam:
+        FuelID = ID - len(TechNam)
+    else:
+        FuelID = ID - len(TechNam) - 1
     InstalledCap.set_value(FuNam, 'ID', FuelID)
     InstalledCap.set_value(FuNam, 'Category', Category)
     InstalledCap.set_value(FuNam, 'Aggregation', 't')
@@ -177,7 +180,10 @@ def ElProdByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
     for yr in years:
         val = ElProd[yr].sum()
         ElProd.set_value(FuNam, yr, val)
-    FuelID = ID - len(TechNam)
+    if 'Carbon Capture and Storage' in TechNam:
+        FuelID = ID - len(TechNam)
+    else:
+        FuelID = ID - len(TechNam) - 1
     ElProd.set_value(FuNam, 'ID', FuelID)
     ElProd.set_value(FuNam, 'Category', Category)
     ElProd.set_value(FuNam, 'Aggregation', 't')
@@ -215,7 +221,10 @@ def FuIntoTe(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
     for yr in years:
         val = FuUs[yr].sum()
         FuUs.set_value(FuNam, yr, val)
-    FuelID = ID - len(TechNam)
+    if 'Carbon Capture and Storage' in TechNam:
+        FuelID = ID - len(TechNam)
+    else:
+        FuelID = ID - len(TechNam) - 1
     FuUs.set_value(FuNam, 'ID', FuelID)
     FuUs.set_value(FuNam, 'Category', Category)
     FuUs.set_value(FuNam, 'Aggregation', 't')
@@ -370,7 +379,10 @@ def NewCapByFandT(FuAbr, FuNam, TechAbre, TechNam, Age, Size):
     for yr in years:
         val = NewCap[yr].sum()
         NewCap.set_value(FuNam, yr, val)
-    FuelID = ID - len(TechNam)
+    if 'Carbon Capture and Storage' in TechNam:
+        FuelID = ID - len(TechNam)
+    else:
+        FuelID = ID - len(TechNam) - 1
     NewCap.set_value(FuNam, 'ID', FuelID)
     NewCap.set_value(FuNam, 'Category', Category)
     NewCap.set_value(FuNam, 'Aggregation', 't')
