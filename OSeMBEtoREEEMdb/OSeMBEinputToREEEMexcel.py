@@ -33,7 +33,7 @@ inputoutput = 'Input'
 #%% Import data input file
 
 #inputData = pd.read_table(ddFileName)
-inputData = pd.read_csv(ddFileName, sep='\t')
+inputData = pd.read_csv(ddFileName, sep='\r')
 
 for i in inputData:
     inputData = inputData[i].str.split(" ", expand = True)
