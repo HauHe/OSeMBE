@@ -72,22 +72,6 @@ def logger():
 
     return rl
 
-#%% OEP session
-def oep_session():
-    user = input('Enter OEP-username:')
-    token = getpass.getpass('Token:')
-
-    OEP_URL = 'openenergy-platform.org'
-    OED_STRING = f'postgresql+oedialect://{user}:{token}@{OEP_URL}'
-    
-    engine = create_engine(OED_STRING)
-    metadata = MetaData(bind=engine)
-    print(metadata)
-    
-    conn = engine.connect()
-    print('Connection established')
-    return conn
-
 #%% Scenario log
 def scenario_log(con, project, version, io, schema, table, script, comment):
     """Write an entry in scenario log table.
@@ -149,11 +133,18 @@ def reeem_filenamesplit(filename):
 
 #%% Check if OEP db Table exists and if not create one
 def oep_table(con, db_table, schema_name):
-    if not engine.dialect.has_table(con, db_table, schema_name):
-        OSeMBETable.create()
-        print('Created table')
+    if fns['io'] == "Input":
+        if not engine.dialect.has_table(con, db_table, schema_name):
+            reeem_osembe_input_table.create()
+            print('Created table')
+        else:
+            print('Table already exists')
     else:
-        print('Table already exists')
+        if not engine.dialect.has_table(con, db_table, schema_name):
+            reeem_osembe_output_table.create()
+            print('Created table')
+        else:
+            print('Table already exists')
 
 #%% Sending OSeMBE df to OEP db
 def osembe_2_oep_db(filename, fns, empty_rows, schema_name, region, con):
@@ -245,8 +236,56 @@ if __name__ == '__main__':
     start_time = time.time()
     log.info('script started...')
     
-    # connection
-    con = oep_session()
+    # OEP session
+    user = input('Enter OEP-username:')
+    token = getpass.getpass('Token:')
+
+    OEP_URL = 'openenergy-platform.org'
+    OED_STRING = f'postgresql+oedialect://{user}:{token}@{OEP_URL}'
+    
+    engine = create_engine(OED_STRING)
+    metadata = MetaData(bind=engine)
+    print(metadata)
+    
+    reeem_osembe_input_table = Table (
+            db_table_input,
+            metadata,
+            Column('nid', FLOAT(50)),
+            Column('year', INTEGER),
+            Column('value', FLOAT(50)),
+            Column('category', VARCHAR(50)),
+            Column('indicator', VARCHAR(50)),
+            Column('unit', VARCHAR(50)),
+            Column('aggregation', VARCHAR(50)),
+            Column('pathway', VARCHAR(50)),
+            Column('framework', VARCHAR(50)),
+            Column('version', VARCHAR(50)),
+            Column('region', VARCHAR(50)),
+            Column('updated', VARCHAR(50)),
+            schema=schema_name
+            )
+    
+    reeem_osembe_output_table = Table (
+            db_table_output,
+            metadata,
+            Column('nid', FLOAT(50)),
+            Column('year', INTEGER),
+            Column('value', FLOAT(50)),
+            Column('category', VARCHAR(50)),
+            Column('indicator', VARCHAR(50)),
+            Column('unit', VARCHAR(50)),
+            Column('aggregation', VARCHAR(50)),
+            Column('pathway', VARCHAR(50)),
+            Column('framework', VARCHAR(50)),
+            Column('version', VARCHAR(50)),
+            Column('region', VARCHAR(50)),
+            Column('updated', VARCHAR(50)),
+            schema=schema_name
+            )
+        
+    con = engine.connect()
+    print('Connection established')
+    
     log.info('...read file(s)...')
     
     # import files
@@ -260,7 +299,8 @@ if __name__ == '__main__':
             db_table = db_table_input
         else:
             db_table = db_table_output
-    
+        
+        oep_table(con, db_table, schema_name)
         # log files
         log.info('read file: {}'.format(filename))
         log.info('...model: {}'.format(fns['model']))
