@@ -224,7 +224,7 @@ regions = ['EU+CH+NO', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE',
 empty_rows = 5
 
 # database table
-schema_name = 'OSeMBE-data'
+schema_name = 'model_draft'
 db_table_input = 'reeem_osembe_input'
 db_table_output = 'reeem_osembe_output'
 
