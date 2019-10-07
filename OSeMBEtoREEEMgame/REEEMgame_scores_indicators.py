@@ -7,7 +7,7 @@ Created on Mon Oct  7 08:09:14 2019
 
 import pandas as pd
 
-#%% Import function to import all data needed
+#%% Import function to import all data needed, from REEEMdb and from excel with populations forecast
 def ImportData():
     rawData = pd.DataFrame()
     return rawData
