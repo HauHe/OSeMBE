@@ -147,7 +147,7 @@ def oep_table(con, db_table, schema_name):
             print('Table already exists')
 
 #%% Sending OSeMBE df to OEP db
-def osembe_2_oep_db(filename, fns, empty_rows, schema_name, region, con):
+def osembe_2_oep_db(filename, fns, empty_rows, schema_name, db_table, region, con):
     """read excel file and sheets, make dataframe and write to database"""
 
     # read file
@@ -204,11 +204,10 @@ def osembe_2_oep_db(filename, fns, empty_rows, schema_name, region, con):
     # print(dfdb.head())
 
     # copy dataframe to database
-    dfdb.to_sql(con=con,
+    dfdb.to_sql(name=db_table,
+                con=con,
                 schema=schema_name,
-                name=db_table,
-                if_exists='append',
-                index=True)
+                if_exists='append')
     log.info('......sheet {} sucessfully imported...'.format(region))
 
 #%% Input
@@ -314,7 +313,7 @@ if __name__ == '__main__':
         # import
         for region in regions:
             osembe_2_oep_db(filename, fns, empty_rows,
-                            schema_name, region, con)
+                            schema_name, db_table, region, con)
 
         # scenario log
         #scenario_log(con, 'REEEM', __version__, 'import', schema_name, db_table,

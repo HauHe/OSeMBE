@@ -11,7 +11,7 @@ import numpy as np
 def import_reeemdb():
     rawData = pd.DataFrame()
     return rawData
-#%% Import from excel file
+#%% This function imports data on the population projection for all countries modelled in OSeMBE and returns them as dictionray with a dataframe per country
 def import_excel(file_name, countries):
     pop_dic = {}
     non_list_countr = ['CH','NO']
