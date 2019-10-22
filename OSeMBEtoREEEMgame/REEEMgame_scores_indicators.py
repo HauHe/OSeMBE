@@ -9,10 +9,29 @@ import pandas as pd
 import numpy as np
 #%% Import function to import data from REEEMdb
 def import_reeemdb():
+    """This function imports data from the REEEMdb
+    
+    It imports the data needed to perform the calculations of scores and indicators for the the REEEMgame.
+    
+    Arguments
+    ---------
+    
+    """
     rawData = pd.DataFrame()
     return rawData
-#%% This function imports data on the population projection for all countries modelled in OSeMBE and returns them as dictionray with a dataframe per country
+#%% 
 def import_excel(file_name, countries):
+    """This function imports data on the population projection 
+    
+    It imports the population for all countries modelled in OSeMBE and returns them as dictionray with a dataframe per country.
+    
+    Arguments
+    ---------
+    file_name : str
+        File name of the excel file that contains the population data for the EU countries.
+    countries : list
+        list with the country codes of all modelled countries
+    """
     pop_dic = {}
     non_list_countr = ['CH','NO']
     for country in countries:
