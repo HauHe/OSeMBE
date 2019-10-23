@@ -7,12 +7,60 @@ Created on Mon Oct  7 08:09:14 2019
 
 import pandas as pd
 import numpy as np
-#%% Import function to import data from REEEMdb
+import sys
+import os
+import getpass
+import json
+import pathlib
+from sqlalchemy import *
+
+#%%
+def reeem_session():
+    """SQLAlchemy session object with valid connection to reeem database"""
+    
+    print('Please provide connection parameters to database:\n' +
+              'Hit [Enter] to take defaults')
+    host = '130.226.55.43' # input('host (default 130.226.55.43): ')
+    port = '5432' # input('port (default 5432): ')
+    database = 'reeem' # input("database name (default 'reeem'): ")
+    user = 'reeem_vis' # input('user (default postgres): ')
+    # password = input('password: ')
+    password = getpass.getpass(prompt='password: ',
+                                   stream=sys.stderr)
+    con = create_engine(
+            'postgresql://' + '%s:%s@%s:%s/%s' % (user,
+                                                  password,
+                                                  host,
+                                                  port,
+                                                  database)).connect()
+    print('Password correct! Database connection established.')
+    return con
+#%% 
 def import_reeemdb():
+    """This function imports data from the REEEMdb
+    
+    It imports the data needed to perform the calculations of scores and indicators for the the REEEMgame.
+    
+    Arguments
+    ---------
+    
+    """
+    
     rawData = pd.DataFrame()
     return rawData
-#%% This function imports data on the population projection for all countries modelled in OSeMBE and returns them as dictionray with a dataframe per country
+#%% 
 def import_excel(file_name, countries):
+    """This function imports data on the population projection 
+    
+    It imports the population for all countries modelled in OSeMBE and returns them as dictionray with a dataframe per country.
+    
+    Arguments
+    ---------
+    file_name : str
+        File name of the excel file that contains the population data for the EU countries.
+    countries : list
+        list with the country codes of all modelled countries
+    """
     pop_dic = {}
     non_list_countr = ['CH','NO']
     for country in countries:
@@ -93,6 +141,8 @@ def eu_lcoe():
 def main():
     xls = 'EC, 2016 - AppendixRefSce.xls'
     countries = ['AT','BE','BG','CH','CY','CZ','DE','DK','EE','ES','FR','FI','GR','HR','HU','IE','IT','LT','LU','LV','MT','NL','NO','PL','PT','RO','SE','SI','SK','UK']
+    reeem_db_con = reeem_session()
     pop_raw = import_excel(xls,countries)
+    
     return pop_raw
 output = main()
