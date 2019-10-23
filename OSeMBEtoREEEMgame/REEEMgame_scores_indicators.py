@@ -36,7 +36,7 @@ def reeem_session():
     print('Password correct! Database connection established.')
     return con
 #%% 
-def import_reeemdb():
+def import_reeemdb(con):
     """This function imports data from the REEEMdb
     
     It imports the data needed to perform the calculations of scores and indicators for the the REEEMgame.
@@ -45,8 +45,25 @@ def import_reeemdb():
     ---------
     
     """
-    
-    rawData = pd.DataFrame()
+    #database info
+    schema = 'model_draft'
+    table_in = 'reeem_osembe_input'
+    table_out = 'reeem_osembe_output'
+    sql = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value, unit -- column
+               FROM {0}.{1} -- table
+               WHERE category = 'CapitalCost'
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               UNION ALL
+               SELECT nid, pathway, version, region, year, category, indicator, value, unit -- column
+               FROM {0}.{2} -- table
+               WHERE category = 'Emissions'
+                   AND indicator = 'CO2'
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_in, table_out))
+    rawData = pd.read_sql_query(sql, con)
     return rawData
 #%% 
 def import_excel(file_name, countries):
@@ -142,7 +159,8 @@ def main():
     xls = 'EC, 2016 - AppendixRefSce.xls'
     countries = ['AT','BE','BG','CH','CY','CZ','DE','DK','EE','ES','FR','FI','GR','HR','HU','IE','IT','LT','LU','LV','MT','NL','NO','PL','PT','RO','SE','SI','SK','UK']
     reeem_db_con = reeem_session()
-    pop_raw = import_excel(xls,countries)
+    raw_data = import_reeemdb(reeem_db_con)
+#    pop_raw = import_excel(xls,countries)
     
-    return pop_raw
+    return raw_data
 output = main()
