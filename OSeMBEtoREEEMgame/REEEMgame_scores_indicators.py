@@ -49,21 +49,33 @@ def import_reeemdb(con):
     schema = 'model_draft'
     table_in = 'reeem_osembe_input'
     table_out = 'reeem_osembe_output'
-    sql = text("""
+    emission = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value, unit -- column
+               FROM {0}.{1} -- table
+               WHERE category = 'Emissions'
+                   AND indicator = 'CO2'
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_out))
+    cap_cost = text("""
                SELECT nid, pathway, version, region, year, category, indicator, value, unit -- column
                FROM {0}.{1} -- table
                WHERE category = 'CapitalCost'
                    AND version = 'DataV2'
                    AND year = '2015'
-               UNION ALL
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_in))
+    new_capa = text("""
                SELECT nid, pathway, version, region, year, category, indicator, value, unit -- column
-               FROM {0}.{2} -- table
-               WHERE category = 'Emissions'
-                   AND indicator = 'CO2'
+               FROM {0}.{1} -- table
+               WHERE category = 'New Capacity'
                    AND version = 'DataV2'
                    AND year = '2015'
-               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_in, table_out))
-    rawData = pd.read_sql_query(sql, con)
+               ORDER BY version, pathway, year; -- sorting  
+                    """.format(schema, table_out))
+    rawData = pd.read_sql_query(emission, con)
+    cap_cost_df = pd.read_sql_query(cap_cost, con)
+    rawData = rawData.append(cap_cost_df, ignore_index = True)
+    rawData = rawData.append(new_capa, ignore_index = True)
     return rawData
 #%% 
 def import_excel(file_name, countries):
