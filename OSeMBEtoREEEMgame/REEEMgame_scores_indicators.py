@@ -333,8 +333,18 @@ def import_excel(file_name, countries):
             pop_dic[country] = pop_data
     return pop_dic
 #%% Calculation of CO2 intensity per citizen
-def co2intensity():
-    CO2Intensity = pd.DataFrame()
+def co2intensity(rawData, countries, pop_data):
+    rawData = output #for testing
+    pop_data = pop_raw #for testing
+    CO2Intensity = pd.DataFrame(columns = ['pathway', 'region', 'year', 'indicator', 'value'])
+    emission_data = rawData[rawData['category'] == 'Emissions']
+    pathways = emission_data['pathway'].unique().tolist()
+    years = emission_data['year'].unique().tolist()
+    for pathway in pathways:
+        for country in countries:
+            for year in years:
+                value = emission_data['value'][(emission_data['pathway']==pathway) & (emission_data['region']==country) & (emission_data['year']==year)] / pop_data[country].loc[year]
+                CO2Intensity = CO2Intensity.append({"pathway":pathway,"region":country,"year": year, "indicator": "Carbon intensity", "value": value}, ignore_index = True)
     return CO2Intensity
 #%% Calculation of the Discounted Investment per Citizen
 def disc_investment():
@@ -386,7 +396,7 @@ def main():
     countries = ['AT','BE','BG','CH','CY','CZ','DE','DK','EE','ES','FR','FI','GR','HR','HU','IE','IT','LT','LU','LV','MT','NL','NO','PL','PT','RO','SE','SI','SK','UK']
     reeem_db_con = reeem_session()
     raw_data = import_reeemdb(reeem_db_con)
-#    pop_raw = import_excel(xls,countries)
+    pop_raw = import_excel(xls,countries)
     
     return raw_data
 output = main()
