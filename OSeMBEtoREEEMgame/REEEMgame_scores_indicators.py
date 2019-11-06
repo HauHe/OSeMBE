@@ -49,21 +49,247 @@ def import_reeemdb(con):
     schema = 'model_draft'
     table_in = 'reeem_osembe_input'
     table_out = 'reeem_osembe_output'
-    sql = text("""
-               SELECT nid, pathway, version, region, year, category, indicator, value, unit -- column
+    emission = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
                FROM {0}.{1} -- table
-               WHERE category = 'CapitalCost'
-                   AND version = 'DataV2'
-                   AND year = '2015'
-               UNION ALL
-               SELECT nid, pathway, version, region, year, category, indicator, value, unit -- column
-               FROM {0}.{2} -- table
                WHERE category = 'Emissions'
                    AND indicator = 'CO2'
                    AND version = 'DataV2'
                    AND year = '2015'
-               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_in, table_out))
-    rawData = pd.read_sql_query(sql, con)
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_out))
+    cap_cost = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
+               FROM {0}.{1} -- table
+               WHERE category = 'CapitalCost'
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_in))
+    new_capa = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
+               FROM {0}.{1} -- table
+               WHERE (category = 'New Capacity'
+                       OR category = 'New Capacity_Coal'
+                       OR category = 'New Capacity_Oil'
+                       OR category = 'New Capacity_Natural gas / non renew.'
+                       OR category = 'New Capacity_Nuclear'
+                       OR category = 'New Capacity_Waste non renewable'
+                       OR category = 'New Capacity_Biomass solid'
+                       OR category = 'New Capacity_Biofuel liquid'
+                       OR category = 'New Capacity_Hydro'
+                       OR category = 'New Capacity_Wind'
+                       OR category = 'New Capacity_Solar'
+                       OR category = 'New Capacity_Geothermal'
+                       OR category = 'New Capacity_Ocean') 
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_out))
+    discount_rate = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
+               FROM {0}.{1} -- table
+               WHERE category = 'DiscountRate'
+                   AND version = 'DataV2'
+                   AND region = 'EU+CH+NO'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_in))
+    oper_life = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
+               FROM {0}.{1} -- table
+               WHERE category = 'OperationalLife'
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_in))
+    inst_capa = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
+               FROM {0}.{1} -- table
+               WHERE (category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Coal'
+                        OR category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Oil'
+                        OR category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Natural gas / non renew.'
+                        OR category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Nuclear'
+                        OR category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Waste non renewable'
+                        OR category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Biomass solid'
+                        OR category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Biofuel liquid'
+                        OR category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Hydro'
+                        OR category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Wind'
+                        OR category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Solar'
+                        OR category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Geothermal'
+                        OR category = 'Installed Capacities Public and Industrial Power and CHP Plants by Fuel and Technology_Ocean')
+                   AND (indicator = 'Heat and Power Unit'
+                        OR indicator = 'Combined Cycle'
+                        OR indicator = 'CHP'
+                        OR indicator = 'Carbon Capture and Storage'
+                        OR indicator = 'Steam Turbine'
+                        OR indicator = 'Steam Turbine small'
+                        OR indicator = 'Steam Turbine large'
+                        OR indicator = 'Conventional'
+                        OR indicator = 'Gas Turbine old'
+                        OR indicator = 'Gas Turbine new'
+                        OR indicator = 'Heat and Power Unit small'
+                        OR indicator = 'Heat and Power Unit large'
+                        OR indicator = 'Run of river'
+                        OR indicator = 'Dam <10MW'
+                        OR indicator = 'Dam 10-100MW'
+                        OR indicator = 'Dam >100MW'
+                        OR indicator = 'Pumped Storage <100MW'
+                        OR indicator = 'Pumped Storage >100MW'
+                        OR indicator = 'CHP old'
+                        OR indicator = 'CHP new'
+                        OR indicator = 'Fuel cell'
+                        OR indicator = 'Generation 2'
+                        OR indicator = 'Generation 3'
+                        OR indicator = 'Wave'
+                        OR indicator = 'Distributed PV'
+                        OR indicator = 'Utility PV'
+                        OR indicator = 'Offshore'
+                        OR indicator = 'Onshore')
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_out))
+    fix_cost = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
+               FROM {0}.{1} -- table
+               WHERE category = 'FixedCost'
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_in))
+    el_prod = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
+               FROM {0}.{1} -- table
+               WHERE (category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Coal'
+                        OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Oil'
+                        OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Natural gas / non renew.'
+                        OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Nuclear'
+                        OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Waste non renewable'
+                        OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Biomass solid'
+                        OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Biofuel liquid'
+                        OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Hydro'
+                        OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Wind'
+                        OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Solar'
+                        OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Geothermal'
+                        OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Ocean')
+                   AND (indicator = 'Heat and Power Unit'
+                        OR indicator = 'Combined Cycle'
+                        OR indicator = 'CHP'
+                        OR indicator = 'Carbon Capture and Storage'
+                        OR indicator = 'Steam Turbine'
+                        OR indicator = 'Steam Turbine small'
+                        OR indicator = 'Steam Turbine large'
+                        OR indicator = 'Conventional'
+                        OR indicator = 'Gas Turbine old'
+                        OR indicator = 'Gas Turbine new'
+                        OR indicator = 'Heat and Power Unit small'
+                        OR indicator = 'Heat and Power Unit large'
+                        OR indicator = 'Run of river'
+                        OR indicator = 'Dam <10MW'
+                        OR indicator = 'Dam 10-100MW'
+                        OR indicator = 'Dam >100MW'
+                        OR indicator = 'Pumped Storage <100MW'
+                        OR indicator = 'Pumped Storage >100MW'
+                        OR indicator = 'CHP old'
+                        OR indicator = 'CHP new'
+                        OR indicator = 'Fuel cell'
+                        OR indicator = 'Generation 2'
+                        OR indicator = 'Generation 3'
+                        OR indicator = 'Wave'
+                        OR indicator = 'Distributed PV'
+                        OR indicator = 'Utility PV'
+                        OR indicator = 'Offshore'
+                        OR indicator = 'Onshore')
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_out))
+    var_cost = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
+               FROM {0}.{1} -- table
+               WHERE category = 'VariableCost'
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_in))
+    fuel_inp = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
+               FROM {0}.{1} -- table
+               WHERE (category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Coal'
+                        OR category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Oil'
+                        OR category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Natural gas / non renew.'
+                        OR category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Nuclear'
+                        OR category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Waste non renewable'
+                        OR category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Biomass solid'
+                        OR category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Biofuel liquid'
+                        OR category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Hydro'
+                        OR category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Wind'
+                        OR category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Solar'
+                        OR category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Geothermal'
+                        OR category = 'Fuel Input to Public and Industrial Power and CHP Plants by Fuel and Technology_Ocean')
+                   AND (indicator = 'Heat and Power Unit'
+                        OR indicator = 'Combined Cycle'
+                        OR indicator = 'CHP'
+                        OR indicator = 'Carbon Capture and Storage'
+                        OR indicator = 'Steam Turbine'
+                        OR indicator = 'Steam Turbine small'
+                        OR indicator = 'Steam Turbine large'
+                        OR indicator = 'Conventional'
+                        OR indicator = 'Gas Turbine old'
+                        OR indicator = 'Gas Turbine new'
+                        OR indicator = 'Heat and Power Unit small'
+                        OR indicator = 'Heat and Power Unit large'
+                        OR indicator = 'Run of river'
+                        OR indicator = 'Dam <10MW'
+                        OR indicator = 'Dam 10-100MW'
+                        OR indicator = 'Dam >100MW'
+                        OR indicator = 'Pumped Storage <100MW'
+                        OR indicator = 'Pumped Storage >100MW'
+                        OR indicator = 'CHP old'
+                        OR indicator = 'CHP new'
+                        OR indicator = 'Fuel cell'
+                        OR indicator = 'Generation 2'
+                        OR indicator = 'Generation 3'
+                        OR indicator = 'Wave'
+                        OR indicator = 'Distributed PV'
+                        OR indicator = 'Utility PV'
+                        OR indicator = 'Offshore'
+                        OR indicator = 'Onshore')
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_out))
+    spec_demand = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
+               FROM {0}.{1} -- table
+               WHERE category = 'SpecifiedAnnualDemand'
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_in))
+    el_exchange = text("""
+               SELECT nid, pathway, version, region, year, category, indicator, value -- column
+               FROM {0}.{1} -- table
+               WHERE category = 'Electricity Exchange - Net Imports'
+                   AND version = 'DataV2'
+                   AND year = '2015'
+               ORDER BY version, pathway, year; -- sorting  """.format(schema, table_out))
+    
+    rawData = pd.read_sql_query(emission, con)
+    cap_cost_df = pd.read_sql_query(cap_cost, con)
+    new_capa_df = pd.read_sql_query(new_capa, con)
+    discount_rate_df = pd.read_sql_query(discount_rate, con)
+    oper_life_df = pd.read_sql_query(oper_life, con)
+    inst_capa_df = pd.read_sql_query(inst_capa, con)
+    fix_cost_df = pd.read_sql_query(fix_cost, con)
+    el_prod_df = pd.read_sql_query(el_prod, con)
+    var_cost_df = pd.read_sql_query(var_cost, con)
+    fuel_inp_df = pd.read_sql_query(fuel_inp, con)
+    spec_demand_df = pd.read_sql_query(spec_demand, con)
+    el_exchange_df = pd.read_sql_query(el_exchange, con)
+    rawData = rawData.append(cap_cost_df, ignore_index = True)
+    rawData = rawData.append(new_capa_df, ignore_index = True)
+    rawData = rawData.append(discount_rate_df, ignore_index = True)
+    rawData = rawData.append(oper_life_df, ignore_index = True)
+    rawData = rawData.append(inst_capa_df, ignore_index = True)
+    rawData = rawData.append(fix_cost_df, ignore_index = True)
+    rawData = rawData.append(el_prod_df, ignore_index = True)
+    rawData = rawData.append(var_cost_df, ignore_index = True)
+    rawData = rawData.append(fuel_inp_df, ignore_index = True)
+    rawData = rawData.append(spec_demand_df, ignore_index = True)
+    rawData = rawData.append(el_exchange_df, ignore_index = True)
+    
+    rawData = rawData.drop(columns = 'version')
     return rawData
 #%% 
 def import_excel(file_name, countries):
@@ -107,8 +333,21 @@ def import_excel(file_name, countries):
             pop_dic[country] = pop_data
     return pop_dic
 #%% Calculation of CO2 intensity per citizen
-def co2intensity():
-    CO2Intensity = pd.DataFrame()
+def co2intensity(rawData, countries, pop_data):
+    rawData = output #for testing
+    pop_data = pop_raw #for testing
+    CO2Intensity = pd.DataFrame(columns = ['pathway', 'region', 'year', 'indicator', 'value'])
+    emission_data = rawData[rawData['category'] == 'Emissions']
+    pathways = emission_data['pathway'].unique().tolist()
+    years = emission_data['year'].unique().tolist()
+#    emission_data.insert(7, 'population', pd.Series([np.nan]), True)
+    for pathway in pathways:
+        for country in countries:
+            for year in years:
+    #            emission_data[(emission_data['pathway']==country) & (emission_data['region']==country)] = pop_data[country].loc[year]
+    #            emission_data.loc[(emission_data['region']==country) & (emission_data['year']==year),'population'] = pop_data[country].loc[year]
+                value = emission_data.loc[(emission_data['pathway']==pathway) & (emission_data['region']==country) & (emission_data['year']==year),'value'] / pop_data[country].loc[year, 'population']
+                CO2Intensity = CO2Intensity.append({"pathway":pathway,"region":country,"year": year, "indicator": "Carbon intensity", "value": value.iloc[0]}, ignore_index = True)
     return CO2Intensity
 #%% Calculation of the Discounted Investment per Citizen
 def disc_investment():
@@ -160,7 +399,7 @@ def main():
     countries = ['AT','BE','BG','CH','CY','CZ','DE','DK','EE','ES','FR','FI','GR','HR','HU','IE','IT','LT','LU','LV','MT','NL','NO','PL','PT','RO','SE','SI','SK','UK']
     reeem_db_con = reeem_session()
     raw_data = import_reeemdb(reeem_db_con)
-#    pop_raw = import_excel(xls,countries)
+    pop_raw = import_excel(xls,countries)
     
     return raw_data
 output = main()
