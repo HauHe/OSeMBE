@@ -340,11 +340,14 @@ def co2intensity(rawData, countries, pop_data):
     emission_data = rawData[rawData['category'] == 'Emissions']
     pathways = emission_data['pathway'].unique().tolist()
     years = emission_data['year'].unique().tolist()
+#    emission_data.insert(7, 'population', pd.Series([np.nan]), True)
     for pathway in pathways:
         for country in countries:
             for year in years:
-                value = emission_data['value'][(emission_data['pathway']==pathway) & (emission_data['region']==country) & (emission_data['year']==year)] / pop_data[country].loc[year]
-                CO2Intensity = CO2Intensity.append({"pathway":pathway,"region":country,"year": year, "indicator": "Carbon intensity", "value": value}, ignore_index = True)
+    #            emission_data[(emission_data['pathway']==country) & (emission_data['region']==country)] = pop_data[country].loc[year]
+    #            emission_data.loc[(emission_data['region']==country) & (emission_data['year']==year),'population'] = pop_data[country].loc[year]
+                value = emission_data.loc[(emission_data['pathway']==pathway) & (emission_data['region']==country) & (emission_data['year']==year),'value'] / pop_data[country].loc[year, 'population']
+                CO2Intensity = CO2Intensity.append({"pathway":pathway,"region":country,"year": year, "indicator": "Carbon intensity", "value": value.iloc[0]}, ignore_index = True)
     return CO2Intensity
 #%% Calculation of the Discounted Investment per Citizen
 def disc_investment():
