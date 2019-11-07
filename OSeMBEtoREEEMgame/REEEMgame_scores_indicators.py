@@ -354,8 +354,17 @@ def disc_investment():
     Disc_Investment = pd.DataFrame()
     return Disc_Investment
 #%% Calculation of Capital Recovery Factor
-def crf():
-    crf = pd.DataFrame()
+def crf(rawData):
+    rawData = output #for testing
+    req_data = rawData[(rawData['category']=='DiscountRate') | (rawData['category']=='OperationalLife')]
+    req_data = req_data.drop_duplicates('indicator')
+    req_data = req_data.drop(['pathway', 'region', 'year'], axis=1)
+    crf = pd.DataFrame(columns = ['category', 'indicator', 'value'])
+    technologies = req_data['indicator'][req_data['category']=='OperationalLife']
+    dr = req_data.loc[req_data['category']=='DiscountRate','value']
+    for technology in technologies:
+        value = (dr.iloc[0]*(1+dr.iloc[0])**req_data.loc[req_data['indicator']==technology,'value'])/((1+dr.iloc[0])**req_data.loc[req_data['indicator']==technology,'value']-1)
+        crf = crf.append({"category":'CapitalRecoveryFactor',"indicator":technology,"value":value.iloc[0]}, ignore_index = True)
     return crf
 #%% Calculation of the Capital Investment per country, technology and year
 def ci():
