@@ -67,8 +67,7 @@ def import_reeemdb(con):
     new_capa = text("""
                SELECT nid, pathway, version, region, year, category, indicator, value -- column
                FROM {0}.{1} -- table
-               WHERE (category = 'New Capacity'
-                       OR category = 'New Capacity_Coal'
+               WHERE (category = 'New Capacity_Coal'
                        OR category = 'New Capacity_Oil'
                        OR category = 'New Capacity_Natural gas / non renew.'
                        OR category = 'New Capacity_Nuclear'
@@ -334,8 +333,8 @@ def import_excel(file_name, countries):
     return pop_dic
 #%% Calculation of CO2 intensity per citizen
 def co2intensity(rawData, countries, pop_data):
-    rawData = output #for testing
-    pop_data = pop_raw #for testing
+#    rawData = output #for testing
+#    pop_data = pop_raw #for testing
     CO2Intensity = pd.DataFrame(columns = ['pathway', 'region', 'year', 'indicator', 'value'])
     emission_data = rawData[rawData['category'] == 'Emissions']
     pathways = emission_data['pathway'].unique().tolist()
@@ -355,7 +354,7 @@ def disc_investment():
     return Disc_Investment
 #%% Calculation of Capital Recovery Factor
 def crf(rawData):
-    rawData = output #for testing
+#    rawData = output #for testing
     req_data = rawData[(rawData['category']=='DiscountRate') | (rawData['category']=='OperationalLife')]
     req_data = req_data.drop_duplicates('indicator')
     req_data = req_data.drop(['pathway', 'region', 'year'], axis=1)
@@ -368,7 +367,25 @@ def crf(rawData):
     return crf
 #%% Calculation of the Capital Investment per country, technology and year
 def ci():
-    ci =pd.DataFrame()
+    rawData = output #for testing
+    req_data = rawData[(rawData['category']=='CapitalCost') | (rawData['category'].str.contains('New Capacity_'))]
+    cap_cost = [71,74,75,744,76,79,745,80,81,92,94,95,96,97,98,99,100,101,102,103,104,105,106,107,110,111,11,746,113,114,115,116,117,118,119,120,121,125,126,128,129,130,131,132,134,135]
+    new_cap = [277,273,274,306,275,244,304,245,246,292,248,249,250,251,252,253,254,255,279,280,281,282,283,284,257,258,259,305,260,261,262,263,264,265,267,268,294,289,290,286,286,286,287,287,270,271]
+    ci =pd.DataFrame(columns = ['pathway', 'region', 'year', 'indicator', 'value'])
+    pathways = req_data['pathway'].unique().tolist()
+    countries = req_data['region'].unique().tolist()
+    years = req_data['year'].unique().tolist()
+    for pathway in pathways:
+        for country in countries:
+            for year in years:
+                j = 0
+                for i in cap_cost:
+                    value = req_data.loc[(req_data['pathway']==pathway) & (req_data['region']==country) & (req_data['year']==year) & (req_data['nid']==i), 'value'] * req_data.loc[(req_data['pathway']==pathway) & (req_data['region']==country) & (req_data['year']==year) & (req_data['nid']==new_cap[j]), 'value'] 
+                    if not value.empty:
+                        ci = ci.append({"pathway":pathway,"region":country,"year":year,"indicator":'CapitalInvestment',"value":value.iloc[0]}, ignore_index = True)
+                    j += 1
+                    print(j)
+            
     return ci
 #%% Calculation of the Annualized Investment Cost
 def aic():
