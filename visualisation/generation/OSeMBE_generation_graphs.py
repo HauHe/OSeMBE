@@ -124,6 +124,9 @@ df_6 = pd.read_sql_query(sql, con)
 #print(df_6)
 # print(df_6.region.unique())
 
+#%% regions in dataframe
+regions = df_6.loc[:,'region'].unique()
+
 #%% Create df for selected region or country
 df_6_reg = df_6[df_6['region']=='EU+CH+NO']
 print(df_6_reg)
