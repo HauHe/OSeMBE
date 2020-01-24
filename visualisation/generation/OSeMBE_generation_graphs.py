@@ -124,164 +124,169 @@ df_6 = pd.read_sql_query(sql, con)
 #print(df_6)
 # print(df_6.region.unique())
 
-#%% Create df for selected region or country
-df_6_reg = df_6[df_6['region']=='EU+CH+NO']
-print(df_6_reg)
+#%% regions in dataframe
+regions = df_6.loc[:,'region'].unique()
 
-#%% Stack data
-# Reshape dataframe
+#%% Loop over all regions in dataframe
 
-df_6p = df_6_reg.pivot(index='year', columns='indicator',  values='value')
-print(df_6p)
-
-#%% Facts dict
-
-info_dict_6 = {}
-info_dict_6['Filename'] = ['{}_reeem_plot_6' .format(pd.to_datetime('today').strftime("%Y-%m-%d"))]
-info_dict_6['Unit'] = df_6.loc[:,'unit'].unique()
-info_dict_6['Pathway'] = df_6.loc[:,'pathway'].unique()
-info_dict_6['Year'] = df_6.loc[:,'year'].unique().tolist()
-info_dict_6['Region'] = df_6_reg.loc[:,'region'].unique()
-info_dict_6['Y-Axis'] = ['{}'.format(*info_dict_6['Unit'])]
-
-#%% Interactive Plot
-x = df_6['year'].unique()
-
-coal = dict(
-    x=x,
-    y=df_6p.loc[:,'Coal'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(0, 0, 0)'),
-    stackgroup='one',
-    name = 'Coal'
-)
-oil = dict(
-    x=x,
-    y=df_6p.loc[:,'Oil'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(121, 43, 41)'),
-    stackgroup='one',
-    name = 'HFO'
-)
-gas = dict(
-    x=x,
-    y=df_6p.loc[:,'Natural gas / non renew.'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(86, 108, 140)'),
-    stackgroup='one',
-    name = 'Natural gas'
-)
-nuclear = dict(
-    x=x,
-    y=df_6p.loc[:,'Nuclear'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(186, 28, 175)'),
-    stackgroup='one',
-    name = 'Nuclear'
-)
-waste = dict(
-    x=x,
-    y=df_6p.loc[:,'Waste non renewable'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(138, 171, 71)'),
-    stackgroup='one',
-    name = 'Waste'
-)
-biomass = dict(
-    x=x,
-    y=df_6p.loc[:,'Biomass solid'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(172, 199, 119)'),
-    stackgroup='one',
-    name = 'Biomass'
-)
-biofuel = dict(
-    x=x,
-    y=df_6p.loc[:,'Biofuel liquid'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(79, 98, 40)'),
-    stackgroup='one',
-    name = 'Biofuel'
-)
-hydro = dict(
-    x=x,
-    y=df_6p.loc[:,'Hydro'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(0, 139, 188)'),
-    stackgroup='one',
-    name = 'Hydro'
-)
-wind = dict(
-    x=x,
-    y=df_6p.loc[:,'Wind'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(143, 119, 173)'),
-    stackgroup='one',
-    name = 'Wind'
-)
-solar = dict(
-    x=x,
-    y=df_6p.loc[:,'Solar'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(230, 175, 0)'),
-    stackgroup='one',
-    name = 'Solar'
-)
-geo = dict(
-    x=x,
-    y=df_6p.loc[:,'Geothermal'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(192, 80, 77)'),
-    stackgroup='one',
-    name = 'Geothermal'
-)
-ocean = dict(
-    x=x,
-    y=df_6p.loc[:,'Ocean'],
-    hoverinfo='x+y',
-    mode='lines',
-    line=dict(width=0.5,
-             color='rgb(22, 54, 92)'),
-    stackgroup='one',
-    name = 'Ocean'
-)
-# Set layout
-layout_generation = go.Layout(
-    #height=1000, width = 10000,
-    #title='CO2-Emissions in EU28',
-    title='Electricity generation in {} in scenario {}'.format(*info_dict_6['Region'],*info_dict_6['Pathway']),
-    # yaxis=dict(title='CO2-Emissions in Mt') )
-    yaxis=dict(title=''.join(info_dict_6['Y-Axis'])) )
-
-data = [coal, oil, gas, nuclear, waste, biomass, biofuel, hydro, wind, solar, geo, ocean]
-
-#%% Build and show graph
-fig = go.Figure(data=data, layout=layout_generation)
-pltly.iplot(fig)
-
-#%% Save graphs as html
-
-htmlname = 'data/{}.html' .format(*info_dict_6['Region'])
-pltly.plot(fig, filename=htmlname)
+for region in regions:
+    #%% Create df for selected region or country
+    df_6_reg = df_6[df_6['region']==region]
+    df_6_reg.head(5)
+    #%% Stack data
+    # Reshape dataframe
+    
+    df_6p = df_6_reg.pivot(index='year', columns='indicator',  values='value')
+    df_6p.head(5)
+    
+    #%% Facts dict
+    
+    info_dict_6 = {}
+    info_dict_6['Filename'] = ['{}_reeem_plot_6' .format(pd.to_datetime('today').strftime("%Y-%m-%d"))]
+    info_dict_6['Unit'] = df_6.loc[:,'unit'].unique()
+    info_dict_6['Pathway'] = df_6.loc[:,'pathway'].unique()
+    info_dict_6['Year'] = df_6.loc[:,'year'].unique().tolist()
+    info_dict_6['Region'] = df_6_reg.loc[:,'region'].unique()
+    info_dict_6['Y-Axis'] = ['{}'.format(*info_dict_6['Unit'])]
+    
+    #%% Interactive Plot
+    x = df_6['year'].unique()
+    
+    coal = dict(
+        x=x,
+        y=df_6p.loc[:,'Coal'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(0, 0, 0)'),
+        stackgroup='one',
+        name = 'Coal'
+    )
+    oil = dict(
+        x=x,
+        y=df_6p.loc[:,'Oil'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(121, 43, 41)'),
+        stackgroup='one',
+        name = 'HFO'
+    )
+    gas = dict(
+        x=x,
+        y=df_6p.loc[:,'Natural gas / non renew.'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(86, 108, 140)'),
+        stackgroup='one',
+        name = 'Natural gas'
+    )
+    nuclear = dict(
+        x=x,
+        y=df_6p.loc[:,'Nuclear'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(186, 28, 175)'),
+        stackgroup='one',
+        name = 'Nuclear'
+    )
+    waste = dict(
+        x=x,
+        y=df_6p.loc[:,'Waste non renewable'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(138, 171, 71)'),
+        stackgroup='one',
+        name = 'Waste'
+    )
+    biomass = dict(
+        x=x,
+        y=df_6p.loc[:,'Biomass solid'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(172, 199, 119)'),
+        stackgroup='one',
+        name = 'Biomass'
+    )
+    biofuel = dict(
+        x=x,
+        y=df_6p.loc[:,'Biofuel liquid'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(79, 98, 40)'),
+        stackgroup='one',
+        name = 'Biofuel'
+    )
+    hydro = dict(
+        x=x,
+        y=df_6p.loc[:,'Hydro'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(0, 139, 188)'),
+        stackgroup='one',
+        name = 'Hydro'
+    )
+    wind = dict(
+        x=x,
+        y=df_6p.loc[:,'Wind'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(143, 119, 173)'),
+        stackgroup='one',
+        name = 'Wind'
+    )
+    solar = dict(
+        x=x,
+        y=df_6p.loc[:,'Solar'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(230, 175, 0)'),
+        stackgroup='one',
+        name = 'Solar'
+    )
+    geo = dict(
+        x=x,
+        y=df_6p.loc[:,'Geothermal'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(192, 80, 77)'),
+        stackgroup='one',
+        name = 'Geothermal'
+    )
+    ocean = dict(
+        x=x,
+        y=df_6p.loc[:,'Ocean'],
+        hoverinfo='x+y',
+        mode='lines',
+        line=dict(width=0.5,
+                 color='rgb(22, 54, 92)'),
+        stackgroup='one',
+        name = 'Ocean'
+    )
+    # Set layout
+    layout_generation = go.Layout(
+        #height=1000, width = 10000,
+        #title='CO2-Emissions in EU28',
+        title='Electricity generation in {} in scenario {}'.format(*info_dict_6['Region'],*info_dict_6['Pathway']),
+        # yaxis=dict(title='CO2-Emissions in Mt') )
+        yaxis=dict(title=''.join(info_dict_6['Y-Axis'])) )
+    
+    data = [coal, oil, gas, nuclear, waste, biomass, biofuel, hydro, wind, solar, geo, ocean]
+    
+    #%% Build and show graph
+    fig = go.Figure(data=data, layout=layout_generation)
+    pltly.iplot(fig)
+    
+    #%% Save graphs as html
+    
+    htmlname = 'data/{}_{}.html' .format(*info_dict_6['Pathway'],*info_dict_6['Region'])
+    pltly.plot(fig, filename=htmlname)
