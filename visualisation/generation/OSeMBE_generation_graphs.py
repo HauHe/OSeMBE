@@ -73,18 +73,19 @@ print("Database Schema:", schema +'\n'+ "Input table:", table_in +'\n'+
 
 #%% List of Pathways in database
 # Pathways
-column = 'pathway' # id, pathway, version, region, year, indicator, category, value, unit
+column = 'pathway,version' # id, pathway, version, region, year, indicator, category, value, unit
 sql = text("""
     SELECT  'In' AS data, {3}, count(*) AS count
     FROM    {0}.{1}
+    WHERE version = 'DataV2'
     GROUP BY {3} 
     UNION ALL 
     SELECT  'Out' AS data, {3}, count(*) AS count
     FROM    {0}.{2}
+    WHERE version = 'DataV2'
     GROUP BY {3} 
     ORDER BY {3}; """.format(schema, table_in, table_out, column))
 df_path = pd.read_sql_query(sql, con)
-df_path
 
 #%% Database query for the electricity generation data
 # Database select (SQL)
