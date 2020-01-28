@@ -87,12 +87,13 @@ sql = text("""
     ORDER BY {3}; """.format(schema, table_in, table_out, column))
 df_path = pd.read_sql_query(sql, con)
 
+pathway = 'B1C0T0E0'
 #%% Database query for the electricity generation data
 # Database select (SQL)
 sql = text("""
     SELECT  pathway, version, region, year, category, indicator, value, unit  -- column
     FROM    {0}.{1}                               -- table
-    WHERE   pathway = 'B0C0T0E1'
+    WHERE   pathway = '{2}'
         AND (category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Coal'
             OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Oil'
             OR category = 'Electricity Production from Public and Industrial Power and CHP Plants by Fuel and Technology_Natural gas / non renew.'
@@ -117,10 +118,9 @@ sql = text("""
             OR indicator = 'Solar'
             OR indicator = 'Geothermal'
             OR indicator = 'Ocean')
-        AND pathway = 'B0C0T0E1'            -- filter 2
         --AND framework = 'FrameworkNA'              
         AND version = 'DataV2'                    -- filter 3
-    ORDER BY pathway, version, year;              -- sorting """.format(schema, table_out))
+    ORDER BY pathway, version, year;              -- sorting """.format(schema, table_out, pathway))
 df_6 = pd.read_sql_query(sql, con)
 #print(df_6)
 # print(df_6.region.unique())
