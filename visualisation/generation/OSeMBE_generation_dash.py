@@ -228,14 +228,14 @@ def update_graph(selected_pathway, selected_region):
             hoverinfo='x+y',
             mode='lines',
             line=dict(width=0.5,
-                      color=fuel_code),
+                      color=colours[fuel_code]),
             stackgroup='one',
             name=i
             ))
     return {
         'data': traces,
         'layout': dict(
-            title='Electricity generation in {} in scenario {}'.format(*selected_region,*selected_pathway),
+            title='Electricity generation in {} in scenario {}'.format(selected_region,selected_pathway),
             yaxis=dict(title=''.join(info_dict['Y-Axis'])),
             font=dict(family='Aleo'),
             )
