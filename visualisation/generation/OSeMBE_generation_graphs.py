@@ -7,23 +7,13 @@ Created on Wed Jan 22 13:26:45 2020
 
 # basic
 import sys
-import os
 import getpass
 import pandas as pd
-import numpy as np
-import json
 import pathlib
 from sqlalchemy import *
 # plot
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
 import plotly.graph_objs as go
 import plotly.offline as pltly
-import colorlover as cl
-import seaborn as sns
-# notebook
-from IPython.display import Image
-from IPython.core.display import HTML 
 
 pltly.init_notebook_mode(connected=True)
 
