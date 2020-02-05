@@ -5,15 +5,22 @@ Created on Wed Jan 29 12:05:23 2020
 @author: haukeh
 """
 
+# import tkinter as tk
+# from tkinter import filedialog
+import numpy as np
 import pandas as pd
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 
-df = pd.read_pickle('B1C0T0E0_generation.pkl')
+# root = tk.Tk()
+# root.withdraw()
+
+# file_path = filedialog.askopenfilename()
+df = pd.read_pickle('data\OSeMBE_generation_2020-02-05.pkl')
 pathways = df.loc[:,'pathway'].unique()
-regions = df.loc[:,'region'].unique()
+regions = np.sort(df.loc[:,'region'].unique())
 
 #%% Dictionary with standard dES colour codes
 colours = dict(
@@ -97,7 +104,8 @@ def update_graph_1(selected_pathway, selected_region):
     info_dict['Pathway'] = filtered_df.loc[:,'pathway'].unique()
     info_dict['Year'] = filtered_df.loc[:,'year'].unique().tolist()
     info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
-    for i in filtered_df['indicator'].unique():
+    fuels = np.sort(filtered_df['indicator'].unique())
+    for i in fuels:
         temp = fuel_abre.loc[fuel_abre['fuel_name']==i,'fuel_abr']
         fuel_code = temp.iloc[0]
         traces.append(dict(
@@ -137,7 +145,8 @@ def update_graph_2(selected_pathway, selected_region):
     info_dict['Pathway'] = filtered_df.loc[:,'pathway'].unique()
     info_dict['Year'] = filtered_df.loc[:,'year'].unique().tolist()
     info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
-    for i in filtered_df['indicator'].unique():
+    fuels = np.sort(filtered_df['indicator'].unique())
+    for i in fuels:
         temp = fuel_abre.loc[fuel_abre['fuel_name']==i,'fuel_abr']
         fuel_code = temp.iloc[0]
         traces.append(dict(
