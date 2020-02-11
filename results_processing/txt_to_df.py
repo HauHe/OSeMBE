@@ -37,7 +37,8 @@ def results_to_dfs(metadata, data):
     data = data.drop(['Region'], axis=1)
     parameters = data['Parameter'].unique()
     for parameter in parameters:
-        # parameter='AnnualEmissions' # for testing
+        print(parameter)
+        # parameter='RateOfActivity' # for testing
         results_dic[parameter] = data[data['Parameter']==parameter]
         df = results_dic[parameter]
         data_expanded = df['rest'].str.split('\t', expand=True)
@@ -48,10 +49,20 @@ def results_to_dfs(metadata, data):
         df = df.replace('?',np.nan)
         df = df.apply(lambda x: pd.to_numeric(x,errors='ignore'))
         df_info = df.dtypes.value_counts()
-        n_txt_col = df_info[1]
+        n_txt_col = sum(df_info[1:])
         if n_txt_col==2:
-            df.columns = ['Parameter','Technology/Emission', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050', '2051', '2052', '2053', '2054', '2055', '2056', '2057', '2058', '2059', '2060']
-            df = df.melt(id_vars=['Parameter','Technology/Emission'],
+            df.columns = ['Parameter','info_1', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050', '2051', '2052', '2053', '2054', '2055', '2056', '2057', '2058', '2059', '2060']
+            df = df.melt(id_vars=['Parameter','info_1'],
+                         var_name="year",
+                         value_name="value")
+        if n_txt_col==3:
+            df.columns = ['Parameter','info_1', 'info_2', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050', '2051', '2052', '2053', '2054', '2055', '2056', '2057', '2058', '2059', '2060']
+            df = df.melt(id_vars=['Parameter','info_1', 'info_2'],
+                         var_name="year",
+                         value_name="value")
+        if n_txt_col==4:
+            df.columns = ['Parameter','info_1', 'info_2', 'info_3', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050', '2051', '2052', '2053', '2054', '2055', '2056', '2057', '2058', '2059', '2060']
+            df = df.melt(id_vars=['Parameter','info_1', 'info_2', 'info_3'],
                          var_name="year",
                          value_name="value")
         results_dic[parameter] = df
