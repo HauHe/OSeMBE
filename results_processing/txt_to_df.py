@@ -89,4 +89,5 @@ for file in sol_txts:
         results_dic[selec_param] = results_dic[selec_param].append(results_df)
     else:
         results_dic[selec_param] = results_df
-    
+
+results_dic[selec_param].to_pickle('data/OSeMBE_{}_{}_{}.pkl'.format(selec_param,metadata['version'],pd.to_datetime('today').strftime("%Y-%m-%d")))
