@@ -80,14 +80,26 @@ for parameter in param_list:
     print(parameter)
 selec_param = input('Please select and enter the parameter from the list above that you would like to extract from all the results files in the directory. NB: Pay attention to the spelling!: ')
 results_dic = {}
-
-for file in sol_txts:
-    metadata = metadata_dic(file)
-    data = get_results(file)
-    results_df = results_to_dfs(selec_param, metadata, data)
-    if bool(results_dic):
-        results_dic[selec_param] = results_dic[selec_param].append(results_df)
-    else:
-        results_dic[selec_param] = results_df
+emission = 'CO2'
+if selec_param == 'AnnualTechnologyEmission':
+    for file in sol_txts:
+        metadata = metadata_dic(file)
+        data = get_results(file)
+        results_df = results_to_dfs(selec_param, metadata, data)
+        results_df = results_df[results_df['info_2']==emission]
+        if bool(results_dic):
+            results_dic[selec_param] = results_dic[selec_param].append(results_df)
+        else:
+            results_dic[selec_param] = results_df
+else:
+    for file in sol_txts:
+        metadata = metadata_dic(file)
+        data = get_results(file)
+        results_df = results_to_dfs(selec_param, metadata, data)
+        if bool(results_dic):
+            results_dic[selec_param] = results_dic[selec_param].append(results_df)
+        else:
+            results_dic[selec_param] = results_df
 
 results_dic[selec_param].to_pickle('data/OSeMBE_{}_{}_{}.pkl'.format(selec_param,metadata['version'],pd.to_datetime('today').strftime("%Y-%m-%d")))
+# results_dic[selec_param].to_csv('data/OSeMBE_{}_{}_{}.csv'.format(selec_param,metadata['version'],pd.to_datetime('today').strftime("%Y-%m-%d")),index=False)
