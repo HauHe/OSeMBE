@@ -91,6 +91,18 @@ if selec_param == 'AnnualTechnologyEmission':
             results_dic[selec_param] = results_dic[selec_param].append(results_df)
         else:
             results_dic[selec_param] = results_df
+if selec_param == 'ProductionByTechnologyAnnual':
+    for file in sol_txts:
+        metadata = metadata_dic(file)
+        data = get_results(file)
+        results_df = results_to_dfs(selec_param, metadata, data)
+        results_df['fuel'] = results_df['info_2'].apply(lambda x: x[2:])
+        results_df = results_df[(results_df['fuel']=='E1')|(results_df['fuel']=='E2')]
+        results_df = results_df.drop(['fuel'], axis=1)
+        if bool(results_dic):
+            results_dic[selec_param] = results_dic[selec_param].append(results_df)
+        else:
+            results_dic[selec_param] = results_df
 else:
     for file in sol_txts:
         metadata = metadata_dic(file)
