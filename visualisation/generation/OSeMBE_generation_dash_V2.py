@@ -146,7 +146,12 @@ def update_graph_1(selected_pathway, selected_region):
     countr_el1 = selected_region + 'E1'
     countr_el2 = selected_region + 'E2'
     filtered_df = df_eg[(df_eg['pathway'] == selected_pathway) & (df_eg['region'] == selected_region) & ((df_eg['info_2']==countr_el1)|(df_eg['info_2']==countr_el2))]
-    filtered_df_p = filtered_df.pivot(index='year', columns='indicator',  values='value')
+    filtered_df['tech'] = filtered_df['info_1'].apply(lambda x: x[4:6])
+    filtered_df = filtered_df[filtered_df['tech']!= '00']
+    filtered_df['techspec'] = filtered_df['info_1'].apply(lambda x: x[2:])
+    filtered_df['production'] = filtered_df.groupby(['techspec','year'])['value'].transform('sum')
+    filtered_df = filtered_df[filtered_df['info_2']==countr_el2]
+    filtered_df_p = filtered_df.pivot(index='year', columns='techspec',  values='value')
     years = filtered_df['year'].unique()
     traces = []
     fuel_short = pd.DataFrame({'fuel_name':['Wind','Hydro','Biofuel liquid','Coal','Biomass solid','Waste non renewable','Oil','Nuclear','Natural gas / non renew.','Ocean','Geothermal','Solar'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','geo','solar']}, columns = ['fuel_name','fuel_abr'])
