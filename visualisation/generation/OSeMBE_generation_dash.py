@@ -18,11 +18,13 @@ from dash.dependencies import Input, Output
 # root.withdraw()
 
 # file_path = filedialog.askopenfilename()
-df_eg = pd.read_pickle('data\OSeMBE_generation_2020-02-05.pkl')
+df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3_2020-02-26.pkl')
+pathways_eg = df_eg.loc[:,'pathway'].unique()
+df_eg['region'] = df_eg['info_1'].apply(lambda x: x[:2])
+regions_eg = np.sort(df_eg.loc[:,'region'].unique())
+
 df_ate = pd.read_pickle('data\OSeMBE_AnnualTechnologyEmission_DataV2_2020-02-14.pkl')
 df_c2t = df_ate[df_ate['info_2']=='CO2']
-pathways_eg = df_eg.loc[:,'pathway'].unique()
-regions_eg = np.sort(df_eg.loc[:,'region'].unique())
 pathways_c2t = df_c2t.loc[:,'pathway'].unique()
 df_c2t['region'] = df_c2t['info_1'].apply(lambda x: x[:2])
 df_c2t['import/domestic'] = df_c2t['info_1'].apply(lambda x: x[6])
