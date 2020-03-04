@@ -21,6 +21,7 @@ from dash.dependencies import Input, Output
 df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3_2020-02-26.pkl')
 pathways_eg = df_eg.loc[:,'pathway'].unique()
 df_eg['region'] = df_eg['info_1'].apply(lambda x: x[:2])
+df_eg['unit'] = 'PJ'
 regions_eg = np.sort(df_eg.loc[:,'region'].unique())
 
 df_ate = pd.read_pickle('data\OSeMBE_AnnualTechnologyEmission_DataV2_2020-02-14.pkl')
@@ -46,7 +47,8 @@ colours = dict(
     wind = 'rgb(143, 119, 173)',
     solar = 'rgb(230, 175, 0)',
     geo = 'rgb(192, 80, 77)',
-    ocean ='rgb(22, 54, 92)')
+    ocean ='rgb(22, 54, 92)',
+    imports = 'rgb(232, 133, 2)')
 #%% dash app
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -141,8 +143,17 @@ app.layout = html.Div(children=[
 
 #%% Function for updating graph
 def update_graph_1(selected_pathway, selected_region):
-    filtered_df = df_eg[(df_eg['pathway'] == selected_pathway) & (df_eg['region'] == selected_region)]
-    filtered_df_p = filtered_df.pivot(index='year', columns='indicator',  values='value')
+    selected_pathway = 'B1C0T0E0'
+    selected_region = 'DE'
+    countr_el1 = selected_region + 'E1'
+    countr_el2 = selected_region + 'E2'
+    filtered_df = df_eg[(df_eg['pathway'] == selected_pathway) & (df_eg['region'] == selected_region) & ((df_eg['info_2']==countr_el1)|(df_eg['info_2']==countr_el2))]
+    filtered_df['tech'] = filtered_df['info_1'].apply(lambda x: x[4:6])
+    filtered_df = filtered_df[filtered_df['tech']!= '00']
+    filtered_df['techspec'] = filtered_df['info_1'].apply(lambda x: x[2:])
+    filtered_df['production'] = filtered_df.groupby(['techspec','year'])['value'].transform('sum')
+    filtered_df = filtered_df[filtered_df['info_2']==countr_el2]
+    filtered_df_p = filtered_df.pivot(index='year', columns='techspec',  values='production')
     years = filtered_df['year'].unique()
     traces = []
     fuel_short = pd.DataFrame({'fuel_name':['Wind','Hydro','Biofuel liquid','Coal','Biomass solid','Waste non renewable','Oil','Nuclear','Natural gas / non renew.','Ocean','Geothermal','Solar'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','geo','solar']}, columns = ['fuel_name','fuel_abr'])
