@@ -21,6 +21,7 @@ from dash.dependencies import Input, Output
 df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3_2020-02-26.pkl')
 pathways_eg = df_eg.loc[:,'pathway'].unique()
 df_eg['region'] = df_eg['info_1'].apply(lambda x: x[:2])
+df_eg['unit'] = 'PJ'
 regions_eg = np.sort(df_eg.loc[:,'region'].unique())
 
 df_ate = pd.read_pickle('data\OSeMBE_AnnualTechnologyEmission_DataV2_2020-02-14.pkl')
@@ -46,7 +47,8 @@ colours = dict(
     wind = 'rgb(143, 119, 173)',
     solar = 'rgb(230, 175, 0)',
     geo = 'rgb(192, 80, 77)',
-    ocean ='rgb(22, 54, 92)')
+    ocean ='rgb(22, 54, 92)',
+    imports = 'rgb(232, 133, 2)')
 #%% dash app
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
