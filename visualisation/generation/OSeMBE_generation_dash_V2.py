@@ -166,6 +166,11 @@ def update_graph_1(selected_pathway, selected_region):
     info_dict['Year'] = filtered_df.loc[:,'year'].unique().tolist()
     info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
     techs = np.sort(filtered_df['info_1'].unique())
+    ele = 'EL'
+    trans = list(filter(lambda x: ele in x , techs))
+    gen = list(filter(lambda x: ele not in x, techs))
+    techs = gen
+    techs.extend(trans)
     for i in techs:
         fuel = i[2:4]
         temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
@@ -173,18 +178,23 @@ def update_graph_1(selected_pathway, selected_region):
         traces.append(dict(
             x = years,
             y = filtered_df_p.loc[:,i],
-            hoverinfo='x+y',
+            # hoverinfo='x+y',
+            hovertemplate=
+            '<i>Technology</i>: %{techs}'+
+            '<br>Production: %{y}</br>',
             mode='lines',
             line=dict(width=0.5,
                       color=colours[fuel_code]),
             stackgroup='one',
-            name=i
+            name=i,
+            showlegend = False
             ))
     return {
         'data': traces,
         'layout': dict(
             title='Electricity generation in {} in scenario {}'.format(selected_region,selected_pathway),
             yaxis=dict(title=''.join(info_dict['Y-Axis'])),
+            hovermode= 'closest',
             font=dict(family='Aleo'),
             )
         }
