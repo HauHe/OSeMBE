@@ -21,7 +21,8 @@ from dash.dependencies import Input, Output
 df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3_2020-02-26.pkl')
 pathways_eg = df_eg.loc[:,'pathway'].unique()
 df_eg['region'] = df_eg['info_1'].apply(lambda x: x[:2])
-df_eg['tech/reg2'] = df_eg['info_1'].apply(lambda x: x[4:6])
+df_eg['fuel'] = df_eg['info_1'].apply(lambda x: x[2:4])
+df_eg['tech'] = df_eg['info_1'].apply(lambda x: x[4:6])
 df_eg['unit'] = 'PJ'
 regions_eg = np.sort(df_eg.loc[:,'region'].unique())
 
@@ -50,6 +51,18 @@ colours = dict(
     geo = 'rgb(192, 80, 77)',
     ocean ='rgb(22, 54, 92)',
     imports = 'rgb(232, 133, 2)')
+
+#%% function to create df with import and export of electricity for selected country
+def impex(selected_pathway, selected_country):
+    selected_pathway = 'B1C0T0E0'
+    selected_country = 'CH'
+    df = df_eg[(df_eg['fuel']=='EL')&((df_eg['region']==selected_country)|(df_eg['tech']==selected_country))&(df_eg['tech']!='00')]
+    countries = []
+    countries = list(df['region'].unique())
+    countries.extend(df['tech'].unique())
+    countries = list(dict.fromkeys(countries))
+    df = df[df['info_2'].str.contains('|'.join(countries))]
+    df = df[df['info_2'].str.contains('E1')]
 #%% dash app
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -144,14 +157,16 @@ app.layout = html.Div(children=[
 
 #%% Function for updating graph
 def update_graph_1(selected_pathway, selected_region):
-    # selected_pathway = 'B1C0T0E0'
-    # selected_region = 'AT'
+    selected_pathway = 'B1C0T0E0'
+    selected_region = 'CH'
     countr_el1 = selected_region + 'E1'
     countr_el2 = selected_region + 'E2'
-    filtered_df = df_eg[(df_eg['pathway'] == selected_pathway) & ((df_eg['region'] == selected_region)|(df_eg['tech/reg2'] == selected_region)) & ((df_eg['info_2']==countr_el1)|(df_eg['info_2']==countr_el2))]
+    transb = 'EL' + selected_region
+    transbelec = df_eg[(df_eg['pathway']==selected_pathway])&(((df_eg['region']==selected_region)&(df_eg[''])|(df_eg['fuel-tech']==transb))
+    filtered_df = df_eg[(df_eg['pathway'] == selected_pathway) & (df_eg['region'] == selected_region) & ((df_eg['info_2']==countr_el1)|(df_eg['info_2']==countr_el2))]
     filtered_df['tech'] = filtered_df['info_1'].apply(lambda x: x[4:6])
     filtered_df = filtered_df[filtered_df['tech']!= '00']
-    # filtered_df['techspec'] = filtered_df['info_1'].apply(lambda x: x[2:])
+    
     filtered_df['production'] = filtered_df.groupby(['info_1','year'])['value'].transform('sum')
     filtered_df = filtered_df[filtered_df['info_2']==countr_el2]
     filtered_df_p = filtered_df.pivot(index='year', columns='info_1',  values='production')
