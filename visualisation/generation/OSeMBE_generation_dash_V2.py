@@ -18,7 +18,7 @@ from dash.dependencies import Input, Output
 # root.withdraw()
 
 # file_path = filedialog.askopenfilename()
-df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3_2020-02-26.pkl')
+df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-03-18.pkl')
 pathways_eg = df_eg.loc[:,'pathway'].unique()
 df_eg['region'] = df_eg['info_1'].apply(lambda x: x[:2])
 df_eg['fuel'] = df_eg['info_1'].apply(lambda x: x[2:4])
@@ -56,13 +56,28 @@ colours = dict(
 def impex(selected_pathway, selected_country):
     selected_pathway = 'B1C0T0E0'
     selected_country = 'CH'
-    df = df_eg[(df_eg['fuel']=='EL')&((df_eg['region']==selected_country)|(df_eg['tech']==selected_country))&(df_eg['tech']!='00')]
+    df = df_eg[(df_eg['fuel']=='EL')&((df_eg['region']==selected_country)|(df_eg['tech']==selected_country))&(df_eg['tech']!='00')&(df_eg['pathway']==selected_pathway)]
     countries = []
     countries = list(df['region'].unique())
     countries.extend(df['tech'].unique())
     countries = list(dict.fromkeys(countries))
     df = df[df['info_2'].str.contains('|'.join(countries))]
     df = df[df['info_2'].str.contains('E1')]
+    years = pd.Series(df['year'].unique())
+    net_imp = pd.DataFrame(index=years)
+    neighbours = []
+    for i in countries:
+        if i != selected_country:
+            neighbours.append(i)
+    links = list(df['info_1'].unique())
+    i = 0
+    for link in links:
+        imp = df[(df['info_1']==link) & (df['info_2']==(selected_country+'E1'))]
+        imp = imp.set_index(years)
+        exp = df[(df['info_1']==link) & (df['info_2']==(neighbours[i]+'E1'))]
+        exp = exp.set_index(years)
+        net_imp[link] = imp['value'] - exp['value']
+        i += 1
 #%% dash app
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
