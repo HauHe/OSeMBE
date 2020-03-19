@@ -51,7 +51,11 @@ colours = dict(
     geo = 'rgb(192, 80, 77)',
     ocean ='rgb(22, 54, 92)',
     imports = 'rgb(232, 133, 2)')
-
+#%% functions for returning positives and negatives
+def positives(value):
+    return max(value, 0)
+def negatives(value):
+    return min(value, 0)
 #%% function to create df with import and export of electricity for selected country
 def impex(selected_pathway, selected_country):
     selected_pathway = 'B1C0T0E0'
@@ -70,14 +74,27 @@ def impex(selected_pathway, selected_country):
         if i != selected_country:
             neighbours.append(i)
     links = list(df['info_1'].unique())
+    label_imp = []
+    label_exp = []
     i = 0
     for link in links:
         imp = df[(df['info_1']==link) & (df['info_2']==(selected_country+'E1'))]
         imp = imp.set_index(years)
         exp = df[(df['info_1']==link) & (df['info_2']==(neighbours[i]+'E1'))]
-        exp = exp.set_index(years)
+        exp = exp.set_index(years) 
         net_imp[link] = imp['value'] - exp['value']
+        label_imp.append(link+'_imp')
+        label_exp.append(link+'_exp')
         i += 1
+    net_imp_pos = pd.DataFrame(index=years,columns=links)
+    net_imp_neg = pd.DataFrame(index=years,columns=links)
+    for link in links:
+        net_imp_pos[link] = net_imp[link].map(positives)
+        net_imp_neg[link] = net_imp[link].map(negatives)
+    net_imp_pos.columns = label_imp
+    net_imp_neg.columns = label_exp
+    return net_imp_pos, net_imp_neg
+        
 #%% dash app
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
