@@ -58,8 +58,8 @@ def negatives(value):
     return min(value, 0)
 #%% function to create df with import and export of electricity for selected country
 def impex(selected_pathway, selected_country):
-    selected_pathway = 'B1C0T0E0'
-    selected_country = 'CH'
+    # selected_pathway = 'B1C0T0E0'
+    # selected_country = 'CH'
     df = df_eg[(df_eg['fuel']=='EL')&((df_eg['region']==selected_country)|(df_eg['tech']==selected_country))&(df_eg['tech']!='00')&(df_eg['pathway']==selected_pathway)]
     countries = []
     countries = list(df['region'].unique())
@@ -189,19 +189,24 @@ app.layout = html.Div(children=[
 
 #%% Function for updating graph
 def update_graph_1(selected_pathway, selected_region):
-    selected_pathway = 'B1C0T0E0'
-    selected_region = 'CH'
+    # selected_pathway = 'B1C0T0E0'
+    # selected_region = 'CH'
     countr_el1 = selected_region + 'E1'
     countr_el2 = selected_region + 'E2'
-    transb = 'EL' + selected_region
-    transbelec = df_eg[(df_eg['pathway']==selected_pathway])&(((df_eg['region']==selected_region)&(df_eg[''])|(df_eg['fuel-tech']==transb))
-    filtered_df = df_eg[(df_eg['pathway'] == selected_pathway) & (df_eg['region'] == selected_region) & ((df_eg['info_2']==countr_el1)|(df_eg['info_2']==countr_el2))]
-    filtered_df['tech'] = filtered_df['info_1'].apply(lambda x: x[4:6])
-    filtered_df = filtered_df[filtered_df['tech']!= '00']
+    filtered_df = df_eg[
+        (df_eg['pathway'] == selected_pathway) 
+        & (df_eg['region'] == selected_region) 
+        & ((df_eg['info_2']==countr_el1)|(df_eg['info_2']==countr_el2)) 
+        & (df_eg['fuel']!='EL') 
+        & (df_eg['tech']!='00')]
     
     filtered_df['production'] = filtered_df.groupby(['info_1','year'])['value'].transform('sum')
     filtered_df = filtered_df[filtered_df['info_2']==countr_el2]
     filtered_df_p = filtered_df.pivot(index='year', columns='info_1',  values='production')
+    pos_imp, neg_imp = impex(selected_pathway, selected_region)
+    df_graph = neg_imp
+    df_graph = df_graph.join(pos_imp)
+    df_graph = df_graph.join(filtered_df_p)
     years = filtered_df['year'].unique()
     traces = []
     fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','oil','geo','solar','imports']}, columns = ['fuel_name','fuel_abr'])
@@ -212,19 +217,19 @@ def update_graph_1(selected_pathway, selected_region):
     info_dict['Pathway'] = filtered_df.loc[:,'pathway'].unique()
     info_dict['Year'] = filtered_df.loc[:,'year'].unique().tolist()
     info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
-    techs = np.sort(filtered_df['info_1'].unique())
-    ele = 'EL'
-    trans = list(filter(lambda x: ele in x , techs))
-    gen = list(filter(lambda x: ele not in x, techs))
-    techs = gen
-    techs.extend(trans)
+    techs = list(df_graph)
+    # ele = 'EL'
+    # trans = list(filter(lambda x: ele in x , techs))
+    # gen = list(filter(lambda x: ele not in x, techs))
+    # techs = gen
+    # techs.extend(trans)
     for i in techs:
         fuel = i[2:4]
         temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
         fuel_code = temp.iloc[0]
         traces.append(dict(
             x = years,
-            y = filtered_df_p.loc[:,i],
+            y = df_graph.loc[:,i],
             # hoverinfo='x+y',
             hovertemplate=
             '<i>Technology</i>: %{techs}'+
