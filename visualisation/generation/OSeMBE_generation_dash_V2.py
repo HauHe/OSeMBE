@@ -18,7 +18,7 @@ from dash.dependencies import Input, Output
 # root.withdraw()
 
 # file_path = filedialog.askopenfilename()
-df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-03-18.pkl')
+df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-03-24.pkl')
 pathways_eg = df_eg.loc[:,'pathway'].unique()
 df_eg['region'] = df_eg['info_1'].apply(lambda x: x[:2])
 df_eg['fuel'] = df_eg['info_1'].apply(lambda x: x[2:4])
@@ -93,7 +93,7 @@ def impex(selected_pathway, selected_country):
         net_imp_neg[link] = net_imp[link].map(negatives)
     net_imp_pos.columns = label_imp
     net_imp_neg.columns = label_exp
-    return net_imp_pos, net_imp_neg
+    return net_imp_neg, net_imp_pos
         
 #%% dash app
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -203,10 +203,11 @@ def update_graph_1(selected_pathway, selected_region):
     filtered_df['production'] = filtered_df.groupby(['info_1','year'])['value'].transform('sum')
     filtered_df = filtered_df[filtered_df['info_2']==countr_el2]
     filtered_df_p = filtered_df.pivot(index='year', columns='info_1',  values='production')
-    pos_imp, neg_imp = impex(selected_pathway, selected_region)
-    df_graph = neg_imp
-    df_graph = df_graph.join(pos_imp)
+    elexp, elimp = impex(selected_pathway, selected_region)
+    df_graph = elimp
+    # df_graph = df_graph.join(pos_imp)
     df_graph = df_graph.join(filtered_df_p)
+    df_graph = df_graph[(df_graph.T != 0).any()]
     years = filtered_df['year'].unique()
     traces = []
     fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','oil','geo','solar','imports']}, columns = ['fuel_name','fuel_abr'])
@@ -217,12 +218,26 @@ def update_graph_1(selected_pathway, selected_region):
     info_dict['Pathway'] = filtered_df.loc[:,'pathway'].unique()
     info_dict['Year'] = filtered_df.loc[:,'year'].unique().tolist()
     info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
+    techs_exp = list(elexp)
+    for i in techs_exp:
+        fuel = i[2:4]
+        temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
+        fuel_code = temp.iloc[0]
+        traces.append(dict(
+            x = years,
+            y = elexp.loc[:,i],
+            # hoverinfo='x+y',
+            hovertemplate=
+            '<i>Technology</i>: %{techs}'+
+            '<br>Production: %{y}</br>',
+            mode='line',
+            line=dict(width=0.5,
+                      color=colours[fuel_code]),
+            stackgroup='one',
+            name=i,
+            showlegend = False
+            ))
     techs = list(df_graph)
-    # ele = 'EL'
-    # trans = list(filter(lambda x: ele in x , techs))
-    # gen = list(filter(lambda x: ele not in x, techs))
-    # techs = gen
-    # techs.extend(trans)
     for i in techs:
         fuel = i[2:4]
         temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
@@ -234,10 +249,10 @@ def update_graph_1(selected_pathway, selected_region):
             hovertemplate=
             '<i>Technology</i>: %{techs}'+
             '<br>Production: %{y}</br>',
-            mode='lines',
+            mode='line',
             line=dict(width=0.5,
                       color=colours[fuel_code]),
-            stackgroup='one',
+            stackgroup='two',
             name=i,
             showlegend = False
             ))
