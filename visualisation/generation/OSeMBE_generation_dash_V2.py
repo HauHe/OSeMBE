@@ -266,46 +266,86 @@ def update_graph_1(selected_pathway, selected_region):
             )
         }
 
-# @app.callback(
-#      Output('Power-generation-2', 'figure'),
-#     [Input('pg-pathway-selection-2', 'value'),
-#      Input('pg-region-country-selection-2', 'value')])
-# #%% Function for updating graph
-# def update_graph_2(selected_pathway, selected_region):
-#     filtered_df = df_eg[(df_eg['pathway'] == selected_pathway) & (df_eg['region'] == selected_region)]
-#     filtered_df_p = filtered_df.pivot(index='year', columns='indicator',  values='value')
-#     years = filtered_df['year'].unique()
-#     traces = []
-#     fuel_short = pd.DataFrame({'fuel_name':['Wind','Hydro','Biofuel liquid','Coal','Biomass solid','Waste non renewable','Oil','Nuclear','Natural gas / non renew.','Ocean','Geothermal','Solar'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','geo','solar']}, columns = ['fuel_name','fuel_abr'])
-#     #%% Facts dict
-#     info_dict = {}
-#     info_dict['Filename'] = ['{}_OSeMBE_plot_generation' .format(pd.to_datetime('today').strftime("%Y-%m-%d"))]
-#     info_dict['Unit'] = filtered_df.loc[:,'unit'].unique()
-#     info_dict['Pathway'] = filtered_df.loc[:,'pathway'].unique()
-#     info_dict['Year'] = filtered_df.loc[:,'year'].unique().tolist()
-#     info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
-#     fuels = np.sort(filtered_df['indicator'].unique())
-#     for i in fuels:
-#         temp = fuel_short.loc[fuel_short['fuel_name']==i,'fuel_abr']
-#         fuel_code = temp.iloc[0]
-#         traces.append(dict(
-#             x = years,
-#             y = filtered_df_p.loc[:,i],
-#             hoverinfo='x+y',
-#             mode='lines',
-#             line=dict(width=0.5,
-#                       color=colours[fuel_code]),
-#             stackgroup='one',
-#             name=i
-#             ))
-#     return {
-#         'data': traces,
-#         'layout': dict(
-#             title='Electricity generation in {} in scenario {}'.format(selected_region,selected_pathway),
-#             yaxis=dict(title=''.join(info_dict['Y-Axis'])),
-#             font=dict(family='Aleo'),
-#             )
-#         }
+@app.callback(
+      Output('Power-generation-2', 'figure'),
+    [Input('pg-pathway-selection-2', 'value'),
+      Input('pg-region-country-selection-2', 'value')])
+#%% Function for updating graph
+def update_graph_2(selected_pathway, selected_region):
+    countr_el1 = selected_region + 'E1'
+    countr_el2 = selected_region + 'E2'
+    filtered_df = df_eg[
+        (df_eg['pathway'] == selected_pathway) 
+        & (df_eg['region'] == selected_region) 
+        & ((df_eg['info_2']==countr_el1)|(df_eg['info_2']==countr_el2)) 
+        & (df_eg['fuel']!='EL') 
+        & (df_eg['tech']!='00')]
+    
+    filtered_df['production'] = filtered_df.groupby(['info_1','year'])['value'].transform('sum')
+    filtered_df = filtered_df[filtered_df['info_2']==countr_el2]
+    filtered_df_p = filtered_df.pivot(index='year', columns='info_1',  values='production')
+    elexp, elimp = impex(selected_pathway, selected_region)
+    df_graph = elimp
+    # df_graph = df_graph.join(pos_imp)
+    df_graph = df_graph.join(filtered_df_p)
+    df_graph = df_graph[(df_graph.T != 0).any()]
+    years = filtered_df['year'].unique()
+    traces = []
+    fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','oil','geo','solar','imports']}, columns = ['fuel_name','fuel_abr'])
+    #%% Facts dict
+    info_dict = {}
+    info_dict['Filename'] = ['{}_OSeMBE_plot_generation' .format(pd.to_datetime('today').strftime("%Y-%m-%d"))]
+    info_dict['Unit'] = filtered_df.loc[:,'unit'].unique()
+    info_dict['Pathway'] = filtered_df.loc[:,'pathway'].unique()
+    info_dict['Year'] = filtered_df.loc[:,'year'].unique().tolist()
+    info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
+    techs_exp = list(elexp)
+    for i in techs_exp:
+        fuel = i[2:4]
+        temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
+        fuel_code = temp.iloc[0]
+        traces.append(dict(
+            x = years,
+            y = elexp.loc[:,i],
+            # hoverinfo='x+y',
+            hovertemplate=
+            '<i>Technology</i>: %{techs}'+
+            '<br>Production: %{y}</br>',
+            mode='line',
+            line=dict(width=0.5,
+                      color=colours[fuel_code]),
+            stackgroup='one',
+            name=i,
+            showlegend = False
+            ))
+    techs = list(df_graph)
+    for i in techs:
+        fuel = i[2:4]
+        temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
+        fuel_code = temp.iloc[0]
+        traces.append(dict(
+            x = years,
+            y = df_graph.loc[:,i],
+            # hoverinfo='x+y',
+            hovertemplate=
+            '<i>Technology</i>: %{techs}'+
+            '<br>Production: %{y}</br>',
+            mode='line',
+            line=dict(width=0.5,
+                      color=colours[fuel_code]),
+            stackgroup='two',
+            name=i,
+            showlegend = False
+            ))
+    return {
+        'data': traces,
+        'layout': dict(
+            title='Electricity generation in {} in scenario {}'.format(selected_region,selected_pathway),
+            yaxis=dict(title=''.join(info_dict['Y-Axis'])),
+            hovermode= 'closest',
+            font=dict(family='Aleo'),
+            )
+        }
 
 # @app.callback(
 #      Output('c2t-graph-1', 'figure'),
