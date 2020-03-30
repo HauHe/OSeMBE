@@ -26,7 +26,7 @@ df_eg['tech'] = df_eg['info_1'].apply(lambda x: x[4:6])
 df_eg['unit'] = 'PJ'
 regions_eg = np.sort(df_eg.loc[:,'region'].unique())
 
-df_ate = pd.read_pickle('data\OSeMBE_AnnualTechnologyEmission_DataV3R1_2020-03-27.pkl')
+df_ate = pd.read_pickle('data\OSeMBE_AnnualTechnologyEmission_DataV3R1_2020-03-30.pkl')
 df_c2t = df_ate[df_ate['info_2']=='CO2']
 pathways_c2t = df_c2t.loc[:,'pathway'].unique()
 df_c2t['region'] = df_c2t['info_1'].apply(lambda x: x[:2])
@@ -248,8 +248,7 @@ def update_graph_1(selected_pathway, selected_region):
             y = df_graph.loc[:,i],
             # hoverinfo='x+y',
             hovertemplate=
-            '<i>Technology</i>: %{techs}'+
-            '<br>Production: %{y}</br>',
+            'Production: %{y}',
             mode='line',
             line=dict(width=0.5,
                       color=colours[fuel_code]),
@@ -310,8 +309,7 @@ def update_graph_2(selected_pathway, selected_region):
             y = elexp.loc[:,i],
             # hoverinfo='x+y',
             hovertemplate=
-            '<i>Technology</i>: %{techs}'+
-            '<br>Production: %{y}</br>',
+            'Production: %{y}',
             mode='line',
             line=dict(width=0.5,
                       color=colours[fuel_code]),
@@ -354,8 +352,8 @@ def update_graph_2(selected_pathway, selected_region):
       Input('c2t-country-selection-1', 'value')])
 #%% Function for updating graph
 def update_graph_3(selected_pathway, selected_region):
-    selected_pathway = 'B1C0T0E0'
-    selected_region = 'DE'
+    # selected_pathway = 'B1C0T0E0'
+    # selected_region = 'DE'
     filtered_df = df_c2t[(df_c2t['pathway'] == selected_pathway) & (df_c2t['region'] == selected_region)]
     filtered_df_p = filtered_df.pivot(index='year', columns='fuel_source',  values='value')
     years = filtered_df['year'].unique()
