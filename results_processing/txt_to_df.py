@@ -26,9 +26,12 @@ def metadata_dic(file):
     metadata = {}
     metadata['model'] = raw_data[0]
     metadata['pathway'] = raw_data[3]
-    metadata['date'] = '2019-07-29'
-    metadata['version'] = 'DataV2'
-    metadata['input-output'] = 'Output'
+    metadata['date'] = '2020-03-24'
+    metadata['version'] = 'Data'+raw_data[1]
+    if raw_data[2] == 'sol':
+        metadata['input-output'] = 'Output'
+    else:
+        metadata['input-output'] = 'Input'
     return metadata
 
 def parameter_list(data):
@@ -91,7 +94,7 @@ if selec_param == 'AnnualTechnologyEmission':
             results_dic[selec_param] = results_dic[selec_param].append(results_df)
         else:
             results_dic[selec_param] = results_df
-if selec_param == 'ProductionByTechnologyAnnual':
+elif selec_param == 'ProductionByTechnologyAnnual':
     for file in sol_txts:
         metadata = metadata_dic(file)
         data = get_results(file)
