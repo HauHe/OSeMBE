@@ -18,7 +18,7 @@ from dash.dependencies import Input, Output
 # root.withdraw()
 
 # file_path = filedialog.askopenfilename()
-df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-03-24.pkl')
+df_eg = pd.read_pickle('data/OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-03-24.pkl')
 pathways_eg = df_eg.loc[:,'pathway'].unique()
 df_eg['region'] = df_eg['info_1'].apply(lambda x: x[:2])
 df_eg['fuel'] = df_eg['info_1'].apply(lambda x: x[2:4])
@@ -179,9 +179,7 @@ app.layout = html.Div(children=[
         ], style={'width': '49%', 'display': 'inline-block'}
         )
     ])
-# app.css.append_css({
-#     'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
-# })
+
 
 @app.callback(
     Output('Power-generation-1', 'figure'),
@@ -431,5 +429,7 @@ def update_graph_4(selected_pathway, selected_region):
             font=dict(family='Aleo'),
             )
         }
+#%%
+
 if __name__ == '__main__':
     app.run_server(debug=False)
