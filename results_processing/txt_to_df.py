@@ -26,7 +26,7 @@ def metadata_dic(file):
     metadata = {}
     metadata['model'] = raw_data[0]
     metadata['pathway'] = raw_data[3]
-    metadata['date'] = '2020-03-24'
+    metadata['date'] = '2020-06-18'
     metadata['version'] = 'Data'+raw_data[1]
     if raw_data[2] == 'sol':
         metadata['input-output'] = 'Output'
