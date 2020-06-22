@@ -190,6 +190,43 @@ app.layout = html.Div(children=[
             )
         ], style={'width': '49%', 'display': 'inline-block'}
         )
+    html.H2(children='Total Annual Capacity'),
+    html.Div([
+        html.Label('Installed power generation capacity - Pathway 1'),
+        dcc.Dropdown(
+            id='tca-pathway-selection-1',
+            options = [{'label': i, 'value': i} for i in pathways_tca],
+            value = 'B1C0T0E0'
+            ),
+        html.Label('Installed power generation capacity - Country 1'),
+        dcc.Dropdown(
+            id='tca-country-selection-1',
+            options = [{'label': i, 'value': i} for i in regions_tca],
+            value = 'AT'
+            ),
+        dcc.Graph(
+            id='tca-graph-1'
+            )
+        ], style={'width': '49%', 'display': 'inline-block'}
+        ),
+    html.Div([
+        html.Label('Installed power generation capacity - Pathway 2'),
+        dcc.Dropdown(
+            id='tca-pathway-selection-2',
+            options = [{'label': i, 'value': i} for i in pathways_tca],
+            value = 'B1C0T0E0'
+            ),
+        html.Label('Installed power generation capacity - Country 2'),
+        dcc.Dropdown(
+            id='tca-country-selection-2',
+            options = [{'label': i, 'value': i} for i in regions_tca],
+            value = 'AT'
+            ),
+        dcc.Graph(
+            id='tca-graph-2'
+            )
+        ], style={'width': '49%', 'display': 'inline-block'}
+        )
     ])
 # app.css.append_css({
 #     'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
@@ -401,11 +438,12 @@ def update_graph_3(selected_pathway, selected_region):
             )
         }
 
+#%% Function for updating graph
 @app.callback(
       Output('c2t-graph-2', 'figure'),
     [Input('c2t-pathway-selection-2', 'value'),
       Input('c2t-country-selection-2', 'value')])
-#%% Function for updating graph
+
 def update_graph_4(selected_pathway, selected_region):
     # selected_pathway = 'B0C0T0E0'
     # selected_region = 'DE'
@@ -443,5 +481,17 @@ def update_graph_4(selected_pathway, selected_region):
             font=dict(family='Aleo'),
             )
         }
+#%% Function for updating graph
+@app.callback(
+      Output('tca-graph-1', 'figure'),
+    [Input('tca-pathway-selection-1', 'value'),
+      Input('tca-country-selection-1', 'value')])
+
+def update_graph_5(selected_pathway, selected_region):
+    selected_pathway = 'B1C0T0E0'
+    selected_region = 'DE'
+    filtered_df = df_tca[(df_tca['pathway'] == selected_pathway) & (df_tca['region'] == selected_region)]
+    filtered_df_p = filtered_df.pivot(index='year', columns='fuel',  values='value')
+
 if __name__ == '__main__':
     app.run_server(debug=False)
