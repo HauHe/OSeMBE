@@ -18,7 +18,7 @@ from dash.dependencies import Input, Output
 # root.withdraw()
 
 # file_path = filedialog.askopenfilename()
-df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-03-24.pkl')
+df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-06-22.pkl')
 pathways_eg = df_eg.loc[:,'pathway'].unique()
 df_eg['region'] = df_eg['info_1'].apply(lambda x: x[:2])
 df_eg['fuel'] = df_eg['info_1'].apply(lambda x: x[2:4])
@@ -26,7 +26,7 @@ df_eg['tech'] = df_eg['info_1'].apply(lambda x: x[4:6])
 df_eg['unit'] = 'PJ'
 regions_eg = np.sort(df_eg.loc[:,'region'].unique())
 
-df_ate = pd.read_pickle('data\OSeMBE_AnnualTechnologyEmission_DataV3R1_2020-03-30.pkl')
+df_ate = pd.read_pickle('data\OSeMBE_AnnualTechnologyEmission_DataV3R1_2020-06-22.pkl')
 df_c2t = df_ate[df_ate['info_2']=='CO2']
 pathways_c2t = df_c2t.loc[:,'pathway'].unique()
 df_c2t['region'] = df_c2t['info_1'].apply(lambda x: x[:2])
@@ -35,6 +35,18 @@ df_c2t['fuel_source'] = df_c2t['info_1'].apply(lambda x: x[2:4]+x[6])
 df_c2t = df_c2t[(df_c2t['import/domestic']=='I') | (df_c2t['import/domestic']=='X')]
 df_c2t['unit'] = 'kt'
 regions_c2t = df_c2t['region'].unique()
+
+df_tca = pd.read_pickle('data\OSeMBE_TotalCapacityAnnual_DataV3R1_2020-06-22.pkl')
+pathways_tca = df_tca.loc[:,'pathway'].unique()
+df_tca['region'] = df_tca['info_1'].apply(lambda x: x[:2])
+df_tca['fuel'] = df_tca['info_1'].apply(lambda x: x[2:4])
+df_tca['tech'] = df_tca['info_1'].apply(lambda x: x[4:6])
+df_tca = df_tca[(df_tca['fuel']!='EL') & (df_tca['tech']!='00')]
+df_tca['unit'] = 'PJ'
+
+if np.logical_and((pathways_eg==pathways_c2t).all(), (pathways_c2t==pathways_tca).all()) == False:
+    print('WARNING: It seems you are importing your results from files that contain different numbers of scenarios.')
+    # If more result parameter are added this could be updated following this approach: https://stackoverflow.com/questions/37777529/comparing-multiple-numpy-arrays
 print('Section 1 run')
 
 #%% Dictionary with standard dES colour codes
