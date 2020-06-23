@@ -41,8 +41,9 @@ pathways_tca = df_tca.loc[:,'pathway'].unique()
 df_tca['region'] = df_tca['info_1'].apply(lambda x: x[:2])
 df_tca['fuel'] = df_tca['info_1'].apply(lambda x: x[2:4])
 df_tca['tech'] = df_tca['info_1'].apply(lambda x: x[4:6])
-df_tca = df_tca[(df_tca['fuel']!='EL') & (df_tca['tech']!='00')]
-df_tca['unit'] = 'PJ'
+df_tca = df_tca[((df_tca['fuel']!='EL')&(df_tca['fuel']!='OI')) & (df_tca['tech']!='00')]
+df_tca['unit'] = 'GW'
+regions_tca = df_tca['region'].unique()
 
 if np.logical_and((pathways_eg==pathways_c2t).all(), (pathways_c2t==pathways_tca).all()) == False:
     print('WARNING: It seems you are importing your results from files that contain different numbers of scenarios.')
@@ -115,6 +116,45 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.layout = html.Div(children=[
     html.H1(children='OSeMBE results'),
+    
+    html.H2(children='Total Annual Capacity'),
+    html.Div([
+        html.Label('Installed power generation capacity - Pathway 1'),
+        dcc.Dropdown(
+            id='tca-pathway-selection-1',
+            options = [{'label': i, 'value': i} for i in pathways_tca],
+            value = 'B1C0T0E0'
+            ),
+        html.Label('Installed power generation capacity - Country 1'),
+        dcc.Dropdown(
+            id='tca-country-selection-1',
+            options = [{'label': i, 'value': i} for i in regions_tca],
+            value = 'AT'
+            ),
+        dcc.Graph(
+            id='tca-graph-1'
+            )
+        ], style={'width': '49%', 'display': 'inline-block'}
+        ),
+    html.Div([
+        html.Label('Installed power generation capacity - Pathway 2'),
+        dcc.Dropdown(
+            id='tca-pathway-selection-2',
+            options = [{'label': i, 'value': i} for i in pathways_tca],
+            value = 'B1C0T0E0'
+            ),
+        html.Label('Installed power generation capacity - Country 2'),
+        dcc.Dropdown(
+            id='tca-country-selection-2',
+            options = [{'label': i, 'value': i} for i in regions_tca],
+            value = 'AT'
+            ),
+        dcc.Graph(
+            id='tca-graph-2'
+            )
+        ], style={'width': '49%', 'display': 'inline-block'}
+        ),
+    
     html.H2(children='Power generation'),
     html.Div([        
         html.Label('Electricity generation - Pathway 1'),
@@ -190,44 +230,8 @@ app.layout = html.Div(children=[
             )
         ], style={'width': '49%', 'display': 'inline-block'}
         )
-    html.H2(children='Total Annual Capacity'),
-    html.Div([
-        html.Label('Installed power generation capacity - Pathway 1'),
-        dcc.Dropdown(
-            id='tca-pathway-selection-1',
-            options = [{'label': i, 'value': i} for i in pathways_tca],
-            value = 'B1C0T0E0'
-            ),
-        html.Label('Installed power generation capacity - Country 1'),
-        dcc.Dropdown(
-            id='tca-country-selection-1',
-            options = [{'label': i, 'value': i} for i in regions_tca],
-            value = 'AT'
-            ),
-        dcc.Graph(
-            id='tca-graph-1'
-            )
-        ], style={'width': '49%', 'display': 'inline-block'}
-        ),
-    html.Div([
-        html.Label('Installed power generation capacity - Pathway 2'),
-        dcc.Dropdown(
-            id='tca-pathway-selection-2',
-            options = [{'label': i, 'value': i} for i in pathways_tca],
-            value = 'B1C0T0E0'
-            ),
-        html.Label('Installed power generation capacity - Country 2'),
-        dcc.Dropdown(
-            id='tca-country-selection-2',
-            options = [{'label': i, 'value': i} for i in regions_tca],
-            value = 'AT'
-            ),
-        dcc.Graph(
-            id='tca-graph-2'
-            )
-        ], style={'width': '49%', 'display': 'inline-block'}
-        )
     ])
+
 # app.css.append_css({
 #     'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
 # })
@@ -277,14 +281,14 @@ def update_graph_1(selected_pathway, selected_region):
             x = years,
             y = elexp.loc[:,i],
             # hoverinfo='x+y',
+            name = i,
             hovertemplate=
-            '<i>Technology</i>: %{techs}'+
-            '<br>Production: %{y}</br>',
+            '<br>Production: %{y}PJ</br>'+
+            'Year: %{x}',
             mode='line',
             line=dict(width=0.5,
                       color=colours[fuel_code]),
             stackgroup='one',
-            name=i,
             showlegend = False
             ))
     techs = list(df_graph)
@@ -297,7 +301,8 @@ def update_graph_1(selected_pathway, selected_region):
             y = df_graph.loc[:,i],
             # hoverinfo='x+y',
             hovertemplate=
-            'Production: %{y}',
+            '<br>Production: %{y}PJ</br>'+
+            'Year: %{x}',
             mode='line',
             line=dict(width=0.5,
                       color=colours[fuel_code]),
@@ -358,7 +363,8 @@ def update_graph_2(selected_pathway, selected_region):
             y = elexp.loc[:,i],
             # hoverinfo='x+y',
             hovertemplate=
-            'Production: %{y}',
+            '<br>Production: %{y}PJ</br>'+
+            'Year: %{x}',
             mode='line',
             line=dict(width=0.5,
                       color=colours[fuel_code]),
@@ -376,8 +382,8 @@ def update_graph_2(selected_pathway, selected_region):
             y = df_graph.loc[:,i],
             # hoverinfo='x+y',
             hovertemplate=
-            '<i>Technology</i>: %{techs}'+
-            '<br>Production: %{y}</br>',
+            '<br>Production: %{y}PJ</br>'+
+            'Year: %{x}',
             mode='line',
             line=dict(width=0.5,
                       color=colours[fuel_code]),
@@ -422,18 +428,22 @@ def update_graph_3(selected_pathway, selected_region):
         traces.append(dict(
             x = years,
             y = filtered_df_p.loc[:,i],
-            hoverinfo='x+y',
-            mode='lines',
+            hovertemplate=
+            '<br>CO2: %{y}kt</br>'+
+            'Year: %{x}',
+            mode='line',
             line=dict(width=0.5,
                       color=colours[fuel_code]),
             stackgroup='one',
-            name=i
+            name=i,
+            showlegend= False
             ))
     return {
         'data': traces,
         'layout': dict(
             title='CO2 Emissions in {} in scenario {}'.format(selected_region,selected_pathway),
             yaxis=dict(title=''.join(info_dict['Y-Axis'])),
+            hovermode= 'closest',
             font=dict(family='Aleo'),
             )
         }
@@ -466,18 +476,22 @@ def update_graph_4(selected_pathway, selected_region):
         traces.append(dict(
             x = years,
             y = filtered_df_p.loc[:,i],
-            hoverinfo='x+y',
+            hovertemplate=
+            '<br>CO2: %{y}kt</br>'+
+            'Year: %{x}',
             mode='lines',
             line=dict(width=0.5,
                       color=colours[fuel_code]),
             stackgroup='one',
-            name=i
+            name=i,
+            showlegend= False
             ))
     return {
         'data': traces,
         'layout': dict(
             title='CO2 Emissions in {} in scenario {}'.format(selected_region,selected_pathway),
             yaxis=dict(title=''.join(info_dict['Y-Axis'])),
+            hovermode= 'closest',
             font=dict(family='Aleo'),
             )
         }
@@ -488,10 +502,87 @@ def update_graph_4(selected_pathway, selected_region):
       Input('tca-country-selection-1', 'value')])
 
 def update_graph_5(selected_pathway, selected_region):
-    selected_pathway = 'B1C0T0E0'
-    selected_region = 'DE'
+    traces = []
+    # selected_pathway = 'B1C0T0E0'
+    # selected_region = 'DE'
     filtered_df = df_tca[(df_tca['pathway'] == selected_pathway) & (df_tca['region'] == selected_region)]
-    filtered_df_p = filtered_df.pivot(index='year', columns='fuel',  values='value')
+    filtered_df_p = filtered_df.pivot(index='year', columns='info_1',  values='value')
+    fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','oil','geo','solar','imports']}, columns = ['fuel_name','fuel_abr'])
+    info_dict = {}
+    info_dict['Unit'] = filtered_df.loc[:,'unit'].unique()
+    info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
+    techs = list(filtered_df_p)
+    years = filtered_df['year'].unique()
+    for i in techs:
+        fuel = i[2:4]
+        temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
+        fuel_code = temp.iloc[0]
+        traces.append(dict(
+            x = years,
+            y = filtered_df_p.loc[:,i],
+            # hoverinfo='x+y',
+            hovertemplate=
+            'Capacity: %{y}GW',
+            mode='line',
+            line=dict(width=0.5,
+                      color=colours[fuel_code]),
+            stackgroup='one',
+            name=i,
+            showlegend = False
+            ))
+    return {
+        'data': traces,
+        'layout': dict(
+            title='Installed power generation capacity in {} in scenario {}'.format(selected_region,selected_pathway),
+            yaxis=dict(title=''.join(info_dict['Y-Axis'])),
+            hovermode= 'closest',
+            font=dict(family='Aleo'),
+            )
+        }
+#%% Function for updating graph
+@app.callback(
+      Output('tca-graph-2', 'figure'),
+    [Input('tca-pathway-selection-2', 'value'),
+      Input('tca-country-selection-2', 'value')])
+
+def update_graph_6(selected_pathway, selected_region):
+    traces = []
+    # selected_pathway = 'B1C0T0E0'
+    # selected_region = 'DE'
+    filtered_df = df_tca[(df_tca['pathway'] == selected_pathway) & (df_tca['region'] == selected_region)]
+    filtered_df_p = filtered_df.pivot(index='year', columns='info_1',  values='value')
+    fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','oil','geo','solar','imports']}, columns = ['fuel_name','fuel_abr'])
+    info_dict = {}
+    info_dict['Unit'] = filtered_df.loc[:,'unit'].unique()
+    info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
+    techs = list(filtered_df_p)
+    years = filtered_df['year'].unique()
+    for i in techs:
+        fuel = i[2:4]
+        temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
+        fuel_code = temp.iloc[0]
+        traces.append(dict(
+            x = years,
+            y = filtered_df_p.loc[:,i],
+            # hoverinfo='x+y',
+            hovertemplate=
+            'Capacity: %{y}GW',
+            mode='line',
+            line=dict(width=0.5,
+                      color=colours[fuel_code]),
+            stackgroup='one',
+            name=i,
+            showlegend = False
+            ))
+    return {
+        'data': traces,
+        'layout': dict(
+            title='Installed power generation capacity in {} in scenario {}'.format(selected_region,selected_pathway),
+            yaxis=dict(title=''.join(info_dict['Y-Axis'])),
+            hovermode= 'closest',
+            font=dict(family='Aleo'),
+            )
+        }
 
 if __name__ == '__main__':
     app.run_server(debug=False)
