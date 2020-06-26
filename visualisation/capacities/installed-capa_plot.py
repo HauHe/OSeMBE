@@ -42,38 +42,45 @@ def get_facts(df):
     return facts_dic
 #%%
 def create_fig(df_exp, country, path):
-    traces = []
+    fig = go.Figure()
     # selected_pathway = 'B1C0T0E0'
     # country = 'DE'
-    df = df_exp[(df_exp['pathway'] == path) & (df_exp['region'] == country)]
+    years = ['2015','2020','2030','2040','2050']
+    df = df_exp[(df_exp['pathway'] == path) 
+                & (df_exp['region'] == country)
+                &((expanded_df['year']==years[0])
+                  |(expanded_df['year']==years[1])
+                  |(expanded_df['year']==years[2])
+                  |(expanded_df['year']==years[3])
+                  |(expanded_df['year']==years[4]))]
     df_p = df.pivot(index='year', columns='info_1',  values='value')
     fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','oil','geo','solar','imports']}, columns = ['fuel_name','fuel_abr'])
     info_dict = {}
     info_dict['Unit'] = df.loc[:,'unit'].unique()
     info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
     techs = list(df_p)
-    years = df['year'].unique()
     for i in techs:
         fuel = i[2:4]
         temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
         fuel_code = temp.iloc[0]
-        traces.append(dict(
+        fig.add_trace(go.Bar(
             x = years,
             y = df_p.loc[:,i],
+            name=i,
             # hoverinfo='x+y',
             hovertemplate=
             'Capacity: %{y}GW',
-            mode='lines',
-            line=dict(width=0.5,
-                      color=colours[fuel_code]),
-            stackgroup='one',
-            name=i,
-            showlegend = False
+            marker_color=colours[fuel_code]
+            # line=dict(width=0.5,
+            # stackgroup='one',
+            # showlegend = False
             ))
-    graph_layout = go.Layout(
+    fig.update_layout(
+        barmode='stack',
         title='Installed power generation capacities in {} in pathway {}'.format(country, path),
+        xaxis = {'type': 'category'},
         yaxis = dict(title=''.join(info_dict['Y-Axis'])) )
-    fig = go.Figure(data=traces, layout=graph_layout )
+    # fig = go.Figure(data=traces, layout=graph_layout )
     return fig
 
 #%% Dictionary with standard dES colour codes
@@ -95,15 +102,18 @@ colours = dict(
 pkl_files = get_file_names()
 for file in pkl_files:
     print(file)
-selec_pkl_file = input('This script is to visualise installed cpacities. Please select the .pkl file you want to read in. Take care with the spelling!:')
+# selec_pkl_file = input('This script is to visualise installed cpacities. Please select the .pkl file you want to read in. Take care with the spelling!:')
+selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-06-25.pkl'
 raw_df = read_pkl(selec_pkl_file)
 expanded_df = expand_df(raw_df)
 facts_dic = get_facts(expanded_df)
 for path in facts_dic['pathways']:
     print(path)
-selec_path = input('Please select a pathway from the above listed by typing it here:')
+# selec_path = input('Please select a pathway from the above listed by typing it here:')
+selec_path = 'B1C0T0E0'
 for region in facts_dic['regions']:
     print(region)
-selec_region = input('Please select a country from the above listed by typing here:')
+# selec_region = input('Please select a country from the above listed by typing here:')
+selec_region = 'DE'
 figure = create_fig(expanded_df, selec_region, selec_path)
 plot(figure)
