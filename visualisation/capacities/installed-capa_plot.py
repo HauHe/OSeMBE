@@ -7,12 +7,10 @@ Created on Thu Jun 25 16:35:17 2020
 #Import of required packages
 import numpy as np
 import pandas as pd
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
+import os
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
-import plotly.offline as pltly
+from plotly.offline import plot
 
 #%%
 def get_file_names():
@@ -27,7 +25,6 @@ def read_pkl(pkl_name):
     df = pd.read_pickle(pkl_name)
     return df
 
-#%%
 def expand_df(df):
     df['region'] = df['info_1'].apply(lambda x: x[:2])
     df['fuel'] = df['info_1'].apply(lambda x: x[2:4])
@@ -43,10 +40,41 @@ def get_facts(df):
     facts_dic['regions'] = df.loc[:,'region'].unique()
     facts_dic['unit'] = df.loc[:, 'unit'].unique()
     return facts_dic
-    
-pathways_tca = df_tca.loc[:,'pathway'].unique()
-
-regions_tca = df_tca['region'].unique()
+#%%
+def create_fig(df_exp, country, path):
+    traces = []
+    # selected_pathway = 'B1C0T0E0'
+    # country = 'DE'
+    df = df_exp[(df_exp['pathway'] == path) & (df_exp['region'] == country)]
+    df_p = df.pivot(index='year', columns='info_1',  values='value')
+    fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','oil','geo','solar','imports']}, columns = ['fuel_name','fuel_abr'])
+    info_dict = {}
+    info_dict['Unit'] = df.loc[:,'unit'].unique()
+    info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
+    techs = list(df_p)
+    years = df['year'].unique()
+    for i in techs:
+        fuel = i[2:4]
+        temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
+        fuel_code = temp.iloc[0]
+        traces.append(dict(
+            x = years,
+            y = df_p.loc[:,i],
+            # hoverinfo='x+y',
+            hovertemplate=
+            'Capacity: %{y}GW',
+            mode='lines',
+            line=dict(width=0.5,
+                      color=colours[fuel_code]),
+            stackgroup='one',
+            name=i,
+            showlegend = False
+            ))
+    graph_layout = go.Layout(
+        title='Installed power generation capacities in {} in pathway {}'.format(country, path),
+        yaxis = dict(title=''.join(info_dict['Y-Axis'])) )
+    fig = go.Figure(data=traces, layout=graph_layout )
+    return fig
 
 #%% Dictionary with standard dES colour codes
 colours = dict(
@@ -71,3 +99,11 @@ selec_pkl_file = input('This script is to visualise installed cpacities. Please 
 raw_df = read_pkl(selec_pkl_file)
 expanded_df = expand_df(raw_df)
 facts_dic = get_facts(expanded_df)
+for path in facts_dic['pathways']:
+    print(path)
+selec_path = input('Please select a pathway from the above listed by typing it here:')
+for region in facts_dic['regions']:
+    print(region)
+selec_region = input('Please select a country from the above listed by typing here:')
+figure = create_fig(expanded_df, selec_region, selec_path)
+plot(figure)
