@@ -8,7 +8,6 @@ Created on Thu Jun 25 16:35:17 2020
 import numpy as np
 import pandas as pd
 import os
-from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 from plotly.offline import plot
 
@@ -126,9 +125,19 @@ def create_fig(df_exp, country, path):
                 ))
     fig.update_layout(
         barmode='stack',
-        title='Installed power generation capacities in {} in pathway {}'.format(country, path),
+        plot_bgcolor='rgba(0,0,0,0)',
+        title={
+            'text':'Installed power generation capacities in {} in pathway {}'.format(country, path),
+            'y':0.95,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'},
         xaxis = {'type': 'category'},
-        yaxis = dict(title=''.join(info_dict['Y-Axis'])) )
+        yaxis = dict(title=''.join(info_dict['Y-Axis'])),
+        # font=dict(
+        #     family="Century Gothic",
+        #     size=16)
+        )
     # fig = go.Figure(data=traces, layout=graph_layout )
     return fig
 
@@ -152,7 +161,7 @@ pkl_files = get_file_names()
 for file in pkl_files:
     print(file)
 # selec_pkl_file = input('This script is to visualise installed cpacities. Please select the .pkl file you want to read in. Take care with the spelling!:')
-selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-06-25.pkl'
+selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-07-06.pkl'
 raw_df = read_pkl(selec_pkl_file)
 expanded_df = expand_df(raw_df)
 facts_dic = get_facts(expanded_df)
