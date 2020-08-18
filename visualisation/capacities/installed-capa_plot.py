@@ -45,7 +45,7 @@ def create_fig(df_exp, country, path):
     fig = go.Figure()
     # df_exp = expanded_df
     # path = 'B1C0T0E0'
-    # country = 'EU28'
+    # country = 'DE'
     years = ['2015','2020','2030','2040','2050']
     df = df_exp[(df_exp['pathway'] == path) 
                 &((expanded_df['year']==years[0])
@@ -54,6 +54,7 @@ def create_fig(df_exp, country, path):
                   |(expanded_df['year']==years[3])
                   |(expanded_df['year']==years[4]))]
     fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','oil','geo','solar','imports']}, columns = ['fuel_name','fuel_abr'])
+    fuel_short = fuel_short.sort_values(['fuel_name'])
     info_dict = {}
     info_dict['Unit'] = df.loc[:,'unit'].unique()
     info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
@@ -93,14 +94,22 @@ def create_fig(df_exp, country, path):
         for year in years:
             for tech in techs:
                 df_p.loc[year, tech] = df.loc[(df['year']==year)&(df['tech_spec']==tech), 'value'].sum()
-        for i in techs:
-            fuel = i[:2]
-            temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
+        df_by_com = pd.DataFrame()
+        coms = fuel_short['fuel_name']
+        coms = coms[(coms!='EL')&(coms!='OI')]
+        for com in coms:    
+            com_selec = df_p.filter(regex="\A"+com, axis=1)
+            com_sum = com_selec.sum(axis=1)
+            df_by_com[com] = com_sum
+
+        for i in coms:
+            # i = 'BF'
+            temp = fuel_short.loc[fuel_short['fuel_name']==i,'fuel_abr']
             fuel_code = temp.iloc[0]
             fig.add_trace(go.Bar(
                 x = years,
-                y = df_p.loc[:,i],
-                name=i,
+                y = df_by_com.loc[:,i],
+                name=fuel_code,
                 # hoverinfo='x+y',
                 hovertemplate=
                 'Capacity: %{y}GW',
@@ -108,16 +117,22 @@ def create_fig(df_exp, country, path):
                 ))
     else:
         df = df[df['region'] == country]
-        df_p = df.pivot(index='year', columns='info_1',  values='value')
+        df_p = df.pivot(index='year', columns='tech_spec',  values='value')
         techs = list(df_p)
-        for i in techs:
-            fuel = i[2:4]
-            temp = fuel_short.loc[fuel_short['fuel_name']==fuel,'fuel_abr']
+        df_by_com = pd.DataFrame()
+        coms = fuel_short['fuel_name']
+        coms = coms[(coms!='EL')&(coms!='OI')]
+        for com in coms:    
+            com_selec = df_p.filter(regex="\A"+com, axis=1)
+            com_sum = com_selec.sum(axis=1)
+            df_by_com[com] = com_sum
+        for i in coms:
+            temp = fuel_short.loc[fuel_short['fuel_name']==i,'fuel_abr']
             fuel_code = temp.iloc[0]
             fig.add_trace(go.Bar(
                 x = years,
-                y = df_p.loc[:,i],
-                name=i,
+                y = df_by_com.loc[:,i],
+                name=fuel_code,
                 # hoverinfo='x+y',
                 hovertemplate=
                 'Capacity: %{y}GW',
@@ -139,29 +154,45 @@ def create_fig(df_exp, country, path):
         #     size=16)
         )
     # fig = go.Figure(data=traces, layout=graph_layout )
-    return fig
+    return fig, df_p
 
-#%% Dictionary with standard dES colour codes
-colours = dict(
-    coal = 'rgb(0, 0, 0)',
-    oil = 'rgb(121, 43, 41)',
-    gas = 'rgb(86, 108, 140)',
-    nuclear = 'rgb(186, 28, 175)',
-    waste = 'rgb(138, 171, 71)',
-    biomass = 'rgb(172, 199, 119)',
-    biofuel = 'rgb(79, 98, 40)',
-    hydro = 'rgb(0, 139, 188)',
-    wind = 'rgb(143, 119, 173)',
-    solar = 'rgb(230, 175, 0)',
-    geo = 'rgb(192, 80, 77)',
-    ocean ='rgb(22, 54, 92)',
-    imports = 'rgb(232, 133, 2)')
-
+#%% Dictionary of dictionaries with colour schemes
+colour_schemes = dict(
+    dES_colours = dict(
+        coal = 'rgb(0, 0, 0)',
+        oil = 'rgb(121, 43, 41)',
+        gas = 'rgb(86, 108, 140)',
+        nuclear = 'rgb(186, 28, 175)',
+        waste = 'rgb(138, 171, 71)',
+        biomass = 'rgb(172, 199, 119)',
+        biofuel = 'rgb(79, 98, 40)',
+        hydro = 'rgb(0, 139, 188)',
+        wind = 'rgb(143, 119, 173)',
+        solar = 'rgb(230, 175, 0)',
+        geo = 'rgb(192, 80, 77)',
+        ocean ='rgb(22, 54, 92)',
+        imports = 'rgb(232, 133, 2)'),
+    TIMES_PanEU_colours = dict(
+        coal = 'rgb(0, 0, 0)',
+        oil = 'rgb(202, 171, 169)',
+        gas = 'rgb(102, 77, 142)',
+        nuclear = 'rgb(109, 109, 109)',
+        waste = 'rgb(223, 134, 192)',
+        biomass = 'rgb(80, 112, 45)',
+        biofuel = 'rgb(178, 191, 225)',
+        hydro = 'rgb(181, 192, 224)',
+        wind = 'rgb(103, 154, 181)',
+        solar = 'rgb(210, 136, 63)',
+        geo = 'rgb(178, 191, 225)',
+        ocean ='rgb(178, 191, 225)',
+        imports = 'rgb(232, 133, 2)')
+    )
+#%% main 
 pkl_files = get_file_names()
 for file in pkl_files:
     print(file)
 # selec_pkl_file = input('This script is to visualise installed cpacities. Please select the .pkl file you want to read in. Take care with the spelling!:')
-selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-07-06.pkl'
+selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-07-22.pkl'
 raw_df = read_pkl(selec_pkl_file)
 expanded_df = expand_df(raw_df)
 facts_dic = get_facts(expanded_df)
@@ -172,6 +203,9 @@ selec_path = 'B1C0T0E0'
 for region in facts_dic['regions']:
     print(region)
 # selec_region = input('Please select a country from the above listed by typing here:')
-selec_region = 'EU28'
-figure = create_fig(expanded_df, selec_region, selec_path)
+selec_region = 'UK'
+print(list(colour_schemes.keys()))
+selec_scheme= input('Please select one of the above listed colour schemes by writing it here and confirming by enter:')
+colours = colour_schemes[selec_scheme]
+figure, table = create_fig(expanded_df, selec_region, selec_path)
 plot(figure)
