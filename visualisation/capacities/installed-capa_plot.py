@@ -156,22 +156,38 @@ def create_fig(df_exp, country, path):
     # fig = go.Figure(data=traces, layout=graph_layout )
     return fig, df_p
 
-#%% Dictionary with standard dES colour codes
-colours = dict(
-    coal = 'rgb(0, 0, 0)',
-    oil = 'rgb(202, 171, 169)',
-    gas = 'rgb(102, 77, 142)',
-    nuclear = 'rgb(109, 109, 109)',
-    waste = 'rgb(223, 134, 192)',
-    biomass = 'rgb(80, 112, 45)',
-    biofuel = 'rgb(178, 191, 225)',
-    hydro = 'rgb(181, 192, 224)',
-    wind = 'rgb(103, 154, 181)',
-    solar = 'rgb(210, 136, 63)',
-    geo = 'rgb(178, 191, 225)',
-    ocean ='rgb(178, 191, 225)',
-    imports = 'rgb(232, 133, 2)')
-
+#%% Dictionary of dictionaries with colour schemes
+colour_schemes = dict(
+    dES_colours = dict(
+        coal = 'rgb(0, 0, 0)',
+        oil = 'rgb(121, 43, 41)',
+        gas = 'rgb(86, 108, 140)',
+        nuclear = 'rgb(186, 28, 175)',
+        waste = 'rgb(138, 171, 71)',
+        biomass = 'rgb(172, 199, 119)',
+        biofuel = 'rgb(79, 98, 40)',
+        hydro = 'rgb(0, 139, 188)',
+        wind = 'rgb(143, 119, 173)',
+        solar = 'rgb(230, 175, 0)',
+        geo = 'rgb(192, 80, 77)',
+        ocean ='rgb(22, 54, 92)',
+        imports = 'rgb(232, 133, 2)'),
+    TIMES_PanEU_colours = dict(
+        coal = 'rgb(0, 0, 0)',
+        oil = 'rgb(202, 171, 169)',
+        gas = 'rgb(102, 77, 142)',
+        nuclear = 'rgb(109, 109, 109)',
+        waste = 'rgb(223, 134, 192)',
+        biomass = 'rgb(80, 112, 45)',
+        biofuel = 'rgb(178, 191, 225)',
+        hydro = 'rgb(181, 192, 224)',
+        wind = 'rgb(103, 154, 181)',
+        solar = 'rgb(210, 136, 63)',
+        geo = 'rgb(178, 191, 225)',
+        ocean ='rgb(178, 191, 225)',
+        imports = 'rgb(232, 133, 2)')
+    )
+#%% main 
 pkl_files = get_file_names()
 for file in pkl_files:
     print(file)
@@ -188,5 +204,8 @@ for region in facts_dic['regions']:
     print(region)
 # selec_region = input('Please select a country from the above listed by typing here:')
 selec_region = 'UK'
+print(list(colour_schemes.keys()))
+selec_scheme= input('Please select one of the above listed colour schemes by writing it here and confirming by enter:')
+colours = colour_schemes[selec_scheme]
 figure, table = create_fig(expanded_df, selec_region, selec_path)
 plot(figure)
