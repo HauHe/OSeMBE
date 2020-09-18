@@ -53,7 +53,9 @@ def create_fig(df_exp, country, path):
                   |(expanded_df['year']==years[2])
                   |(expanded_df['year']==years[3])
                   |(expanded_df['year']==years[4]))]
-    fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['wind','hydro','biofuel','coal','biomass','waste','oil','nuclear','gas','ocean','oil','geo','solar','imports']}, columns = ['fuel_name','fuel_abr'])
+    path_names = {'B1C0T0E0':'REF','B1C0ToE0':'OBS','B1C0TxE0':'CBS'}
+    countries = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Repunlic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','EU28':'EU28'}
+    fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['Wind','Hydro','Biofuel','Coal','Biomass','Waste','Oil','Nuclear','Gas','Ocean','Oil','Geo','Solar','Imports']}, columns = ['fuel_name','fuel_abr'])
     fuel_short = fuel_short.sort_values(['fuel_name'])
     info_dict = {}
     info_dict['Unit'] = df.loc[:,'unit'].unique()
@@ -142,50 +144,50 @@ def create_fig(df_exp, country, path):
         barmode='stack',
         plot_bgcolor='rgba(0,0,0,0)',
         title={
-            'text':'Installed power generation capacities in {} in pathway {}'.format(country, path),
+            'text':'Installed power generation capacities in {} in pathway {}'.format(countries[country], path_names[path]),
             'y':0.95,
             'x':0.5,
             'xanchor': 'center',
             'yanchor': 'top'},
         xaxis = {'type': 'category'},
-        yaxis = dict(title=''.join(info_dict['Y-Axis'])),
+        yaxis = dict(title='Installed power capacity [{}]'.format(info_dict['Y-Axis'][0]))
         # font=dict(
         #     family="Century Gothic",
         #     size=16)
         )
-    # fig = go.Figure(data=traces, layout=graph_layout )
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='Black')
     return fig, df_p
 
 #%% Dictionary of dictionaries with colour schemes
 colour_schemes = dict(
     dES_colours = dict(
-        coal = 'rgb(0, 0, 0)',
-        oil = 'rgb(121, 43, 41)',
-        gas = 'rgb(86, 108, 140)',
-        nuclear = 'rgb(186, 28, 175)',
-        waste = 'rgb(138, 171, 71)',
-        biomass = 'rgb(172, 199, 119)',
-        biofuel = 'rgb(79, 98, 40)',
-        hydro = 'rgb(0, 139, 188)',
-        wind = 'rgb(143, 119, 173)',
-        solar = 'rgb(230, 175, 0)',
-        geo = 'rgb(192, 80, 77)',
-        ocean ='rgb(22, 54, 92)',
-        imports = 'rgb(232, 133, 2)'),
+        Coal = 'rgb(0, 0, 0)',
+        Oil = 'rgb(121, 43, 41)',
+        Gas = 'rgb(86, 108, 140)',
+        Nuclear = 'rgb(186, 28, 175)',
+        Waste = 'rgb(138, 171, 71)',
+        Biomass = 'rgb(172, 199, 119)',
+        Biofuel = 'rgb(79, 98, 40)',
+        Hydro = 'rgb(0, 139, 188)',
+        Wind = 'rgb(143, 119, 173)',
+        Solar = 'rgb(230, 175, 0)',
+        Geo = 'rgb(192, 80, 77)',
+        Ocean ='rgb(22, 54, 92)',
+        Imports = 'rgb(232, 133, 2)'),
     TIMES_PanEU_colours = dict(
-        coal = 'rgb(0, 0, 0)',
-        oil = 'rgb(202, 171, 169)',
-        gas = 'rgb(102, 77, 142)',
-        nuclear = 'rgb(109, 109, 109)',
-        waste = 'rgb(223, 134, 192)',
-        biomass = 'rgb(80, 112, 45)',
-        biofuel = 'rgb(178, 191, 225)',
-        hydro = 'rgb(181, 192, 224)',
-        wind = 'rgb(103, 154, 181)',
-        solar = 'rgb(210, 136, 63)',
-        geo = 'rgb(178, 191, 225)',
-        ocean ='rgb(178, 191, 225)',
-        imports = 'rgb(232, 133, 2)')
+        Coal = 'rgb(0, 0, 0)',
+        Oil = 'rgb(202, 171, 169)',
+        Gas = 'rgb(102, 77, 142)',
+        Nuclear = 'rgb(109, 109, 109)',
+        Waste = 'rgb(223, 134, 192)',
+        Biomass = 'rgb(80, 112, 45)',
+        Biofuel = 'rgb(178, 191, 225)',
+        Hydro = 'rgb(181, 192, 224)',
+        Wind = 'rgb(103, 154, 181)',
+        Solar = 'rgb(210, 136, 63)',
+        Geo = 'rgb(178, 191, 225)',
+        Ocean ='rgb(178, 191, 225)',
+        Imports = 'rgb(232, 133, 2)')
     )
 #%% main 
 pkl_files = get_file_names()
@@ -199,13 +201,14 @@ facts_dic = get_facts(expanded_df)
 for path in facts_dic['pathways']:
     print(path)
 # selec_path = input('Please select a pathway from the above listed by typing it here:')
-selec_path = 'B1C0T0E0'
+selec_path = 'B1C0TxE0'
 for region in facts_dic['regions']:
     print(region)
 # selec_region = input('Please select a country from the above listed by typing here:')
-selec_region = 'UK'
+selec_region = 'DE'
 print(list(colour_schemes.keys()))
-selec_scheme= input('Please select one of the above listed colour schemes by writing it here and confirming by enter:')
+# selec_scheme = input('Please select one of the above listed colour schemes by writing it here and confirming by enter:')
+selec_scheme = 'dES_colours' 
 colours = colour_schemes[selec_scheme]
 figure, table = create_fig(expanded_df, selec_region, selec_path)
 plot(figure)
