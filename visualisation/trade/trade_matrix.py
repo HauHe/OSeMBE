@@ -60,6 +60,8 @@ if len(pkl_list)>1:
     pkl_file = input('Please select one of the above listed pkl files to read in by typing its name: ')
 else:
     pkl_file = pkl_list[0]
+pkl_details = pkl_file.split('_')
+date = pkl_details[3][:10]
 df_raw = get_raw_df(pkl_file)
 path_list = list(df_raw['pathway'].unique())
 # for path in df_raw['pathway'].unique():
@@ -73,13 +75,11 @@ years_list = list(df_raw['year'].unique())
 for path in path_list:
     for year in years_list:
         exchange_matrix = build_matrix(df_raw, path, year)
-        exchange_matrix.to_csv('OSeMBE_cross-border-el_{}_{}_{}.txt'.format(path, year, pd.to_datetime('today').strftime("%Y-%m-%d")),
+        exchange_matrix.to_csv('OSeMBE_cross-border-el_{}_{}_{}.txt'.format(path, year, date),
                                sep=' ',
                                float_format='%10.0f',
                                index_label='PJ',
                                quoting=csv.QUOTE_NONE,
                                escapechar=' ')
-        total_exchange = exchange_matrix.to_numpy().sum()
-        total_exchange = pd.Series(total_exchange)
-        total_exchange.to_csv('OSeMBE_total-cross-border-el_{}_{}_{}.txt'.format(path, year, pd.to_datetime('today').strftime("%Y-%m-%d")),
-                                 index=False, header=False)
+        total = pd.Series(exchange_matrix.to_numpy().sum())
+        total.to_csv('OSeMBE_total-cross-border-el_{}_{}_{}.txt'.format(path, year, date), header=False, index=False)
