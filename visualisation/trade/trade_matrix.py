@@ -79,3 +79,7 @@ for path in path_list:
                                index_label='PJ',
                                quoting=csv.QUOTE_NONE,
                                escapechar=' ')
+        total_exchange = exchange_matrix.to_numpy().sum()
+        total_exchange = pd.Series(total_exchange)
+        total_exchange.to_csv('OSeMBE_total-cross-border-el_{}_{}_{}.txt'.format(path, year, pd.to_datetime('today').strftime("%Y-%m-%d")),
+                                 index=False, header=False)
