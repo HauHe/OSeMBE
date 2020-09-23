@@ -47,109 +47,126 @@ def create_fig(df_exp, country, path):
     # path = 'B1C0T0E0'
     # country = 'DE'
     years = ['2015','2020','2030','2040','2050']
-    df = df_exp[(df_exp['pathway'] == path) 
-                &((expanded_df['year']==years[0])
-                  |(expanded_df['year']==years[1])
-                  |(expanded_df['year']==years[2])
-                  |(expanded_df['year']==years[3])
-                  |(expanded_df['year']==years[4]))]
     path_names = {'B1C0T0E0':'REF','B1C0ToE0':'OBS','B1C0TxE0':'CBS'}
+    paths = ['B1C0TxE0','B1C0T0E0','B1C0ToE0']
     countries = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Repunlic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','EU28':'EU28'}
     fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['Wind','Hydro','Biofuel','Coal','Biomass','Waste','Oil','Nuclear','Gas','Ocean','Oil','Geo','Solar','Imports']}, columns = ['fuel_name','fuel_abr'])
     fuel_short = fuel_short.sort_values(['fuel_name'])
+    df_sel_year = df_exp[((df_exp['year']==years[0])
+                  |(df_exp['year']==years[1])
+                  |(df_exp['year']==years[2])
+                  |(df_exp['year']==years[3])
+                  |(df_exp['year']==years[4]))]
     info_dict = {}
-    info_dict['Unit'] = df.loc[:,'unit'].unique()
+    info_dict['Unit'] = df_sel_year.loc[:,'unit'].unique()
     info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
-    if country == 'EU28':
-        df = df[(df['region']=='AT')
-               |(df['region']=='BE')
-               |(df['region']=='BG')
-               |(df['region']=='CY')
-               |(df['region']=='CZ')
-               |(df['region']=='DE')
-               |(df['region']=='DK')
-               |(df['region']=='EE')
-               |(df['region']=='ES')
-               |(df['region']=='FI')
-               |(df['region']=='FR')
-               |(df['region']=='GR')
-               |(df['region']=='HR')
-               |(df['region']=='HU')
-               |(df['region']=='IE')
-               |(df['region']=='IT')
-               |(df['region']=='LT')
-               |(df['region']=='LU')
-               |(df['region']=='LV')
-               |(df['region']=='MT')
-               |(df['region']=='NL')
-               |(df['region']=='PL')
-               |(df['region']=='PT')
-               |(df['region']=='RO')
-               |(df['region']=='SE')
-               |(df['region']=='SI')
-               |(df['region']=='SK')
-               |(df['region']=='UK')]
-        df.drop('info_1',axis=1, inplace=True)
-        df.drop('region',axis=1, inplace=True)
-        techs = df['tech_spec'].unique()
-        df_p = pd.DataFrame(index=years, columns=techs)
-        for year in years:
-            for tech in techs:
-                df_p.loc[year, tech] = df.loc[(df['year']==year)&(df['tech_spec']==tech), 'value'].sum()
-        df_by_com = pd.DataFrame()
-        coms = fuel_short['fuel_name']
-        coms = coms[(coms!='EL')&(coms!='OI')]
-        for com in coms:    
-            com_selec = df_p.filter(regex="\A"+com, axis=1)
-            com_sum = com_selec.sum(axis=1)
-            df_by_com[com] = com_sum
-
-        for i in coms:
-            # i = 'BF'
-            temp = fuel_short.loc[fuel_short['fuel_name']==i,'fuel_abr']
-            fuel_code = temp.iloc[0]
-            fig.add_trace(go.Bar(
-                x = years,
-                y = df_by_com.loc[:,i],
-                name=fuel_code,
-                # hoverinfo='x+y',
-                hovertemplate=
-                'Capacity: %{y}GW',
-                marker_color=colours[fuel_code]
-                ))
-    else:
-        df = df[df['region'] == country]
-        df_p = df.pivot(index='year', columns='tech_spec',  values='value')
-        techs = list(df_p)
-        df_by_com = pd.DataFrame()
-        coms = fuel_short['fuel_name']
-        coms = coms[(coms!='EL')&(coms!='OI')]
-        for com in coms:    
-            com_selec = df_p.filter(regex="\A"+com, axis=1)
-            com_sum = com_selec.sum(axis=1)
-            df_by_com[com] = com_sum
-        for i in coms:
-            temp = fuel_short.loc[fuel_short['fuel_name']==i,'fuel_abr']
-            fuel_code = temp.iloc[0]
-            fig.add_trace(go.Bar(
-                x = years,
-                y = df_by_com.loc[:,i],
-                name=fuel_code,
-                # hoverinfo='x+y',
-                hovertemplate=
-                'Capacity: %{y}GW',
-                marker_color=colours[fuel_code]
-                ))
+    dict_path = {}
+    for j in paths:
+        df = df_sel_year[df_sel_year['pathway']==j]
+        if country == 'EU28':
+            df = df[(df['region']=='AT')
+                   |(df['region']=='BE')
+                   |(df['region']=='BG')
+                   |(df['region']=='CY')
+                   |(df['region']=='CZ')
+                   |(df['region']=='DE')
+                   |(df['region']=='DK')
+                   |(df['region']=='EE')
+                   |(df['region']=='ES')
+                   |(df['region']=='FI')
+                   |(df['region']=='FR')
+                   |(df['region']=='GR')
+                   |(df['region']=='HR')
+                   |(df['region']=='HU')
+                   |(df['region']=='IE')
+                   |(df['region']=='IT')
+                   |(df['region']=='LT')
+                   |(df['region']=='LU')
+                   |(df['region']=='LV')
+                   |(df['region']=='MT')
+                   |(df['region']=='NL')
+                   |(df['region']=='PL')
+                   |(df['region']=='PT')
+                   |(df['region']=='RO')
+                   |(df['region']=='SE')
+                   |(df['region']=='SI')
+                   |(df['region']=='SK')
+                   |(df['region']=='UK')]
+            df.drop('info_1',axis=1, inplace=True)
+            df.drop('region',axis=1, inplace=True)
+            techs = df['tech_spec'].unique()
+            df_p = pd.DataFrame(index=years, columns=techs)
+            for year in years:
+                for tech in techs:
+                    df_p.loc[year, tech] = df.loc[(df['year']==year)&(df['tech_spec']==tech), 'value'].sum()
+            df_by_com = pd.DataFrame()
+            coms = fuel_short['fuel_name']
+            coms = coms[(coms!='EL')&(coms!='OI')]
+            for com in coms:    
+                com_selec = df_p.filter(regex="\A"+com, axis=1)
+                com_sum = com_selec.sum(axis=1)
+                df_by_com[com] = com_sum
+            dict_path[j] = df_by_com
+    
+            # for i in coms:
+            #     # i = 'BF'
+            #     temp = fuel_short.loc[fuel_short['fuel_name']==i,'fuel_abr']
+            #     fuel_code = temp.iloc[0]
+            #     fig.add_trace(go.Bar(
+            #         x = years,
+            #         y = df_by_com.loc[:,i],
+            #         name=fuel_code,
+            #         # hoverinfo='x+y',
+            #         hovertemplate=
+            #         'Capacity: %{y}GW',
+            #         marker_color=colours[fuel_code]
+            #         ))
+        else:
+            df = df[df['region'] == country]
+            df_p = df.pivot(index='year', columns='tech_spec',  values='value')
+            techs = list(df_p)
+            df_by_com = pd.DataFrame()
+            coms = fuel_short['fuel_name']
+            coms = coms[(coms!='EL')&(coms!='OI')]
+            for com in coms:    
+                com_selec = df_p.filter(regex="\A"+com, axis=1)
+                com_sum = com_selec.sum(axis=1)
+                df_by_com[com] = com_sum
+            dict_path[j] = df_by_com
+    df_blend = pd.DataFrame(columns=coms)
+    path_ind =[]
+    year_ind =[]
+    for year in years:
+        for j in paths:                
+            df_blend = df_blend.append(dict_path[j].loc[year])
+            path_ind.append(path_names[j])
+            year_ind.append(year)
+    print(year_ind)
+    df_blend = df_blend.set_index([pd.Index(path_ind, name='paths')],append=True)
+    
+    for i in coms:
+        temp = fuel_short.loc[fuel_short['fuel_name']==i,'fuel_abr']
+        fuel_code = temp.iloc[0]
+        fig.add_trace(go.Bar(
+            y = df_blend.loc[:,i],
+            x = [year_ind,path_ind],
+            name=fuel_code,
+            # hoverinfo='x+y',
+            hovertemplate=
+            'Capacity: %{y}GW',
+            marker_color=colours[fuel_code]
+            ))
+        
     fig.update_layout(
         barmode='stack',
         plot_bgcolor='rgba(0,0,0,0)',
         title={
-            'text':'Installed power generation capacities in {} in pathway {}'.format(countries[country], path_names[path]),
+            'text':'Installed power generation capacities in {}'.format(countries[country]),
             'y':0.95,
             'x':0.5,
             'xanchor': 'center',
             'yanchor': 'top'},
-        xaxis = {'type': 'category'},
+        xaxis = {'type': 'multicategory'},
         yaxis = dict(title='Installed power capacity [{}]'.format(info_dict['Y-Axis'][0]))
         # font=dict(
         #     family="Century Gothic",
@@ -194,7 +211,7 @@ pkl_files = get_file_names()
 for file in pkl_files:
     print(file)
 # selec_pkl_file = input('This script is to visualise installed cpacities. Please select the .pkl file you want to read in. Take care with the spelling!:')
-selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-07-22.pkl'
+selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-09-21.pkl'
 raw_df = read_pkl(selec_pkl_file)
 expanded_df = expand_df(raw_df)
 facts_dic = get_facts(expanded_df)
