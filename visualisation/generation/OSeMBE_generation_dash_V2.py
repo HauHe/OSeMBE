@@ -18,7 +18,7 @@ from dash.dependencies import Input, Output
 # root.withdraw()
 
 # file_path = filedialog.askopenfilename()
-df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-07-09.pkl')
+df_eg = pd.read_pickle('data\OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-09-21.pkl')
 pathways_eg = df_eg.loc[:,'pathway'].unique()
 df_eg['region'] = df_eg['info_1'].apply(lambda x: x[:2])
 df_eg['fuel'] = df_eg['info_1'].apply(lambda x: x[2:4])
@@ -26,7 +26,7 @@ df_eg['tech'] = df_eg['info_1'].apply(lambda x: x[4:6])
 df_eg['unit'] = 'PJ'
 regions_eg = np.sort(df_eg.loc[:,'region'].unique())
 
-df_ate = pd.read_pickle('data\OSeMBE_AnnualTechnologyEmission_DataV3R1_2020-07-09.pkl')
+df_ate = pd.read_pickle('data\OSeMBE_AnnualTechnologyEmission_DataV3R1_2020-09-21.pkl')
 df_c2t = df_ate[df_ate['info_2']=='CO2']
 pathways_c2t = df_c2t.loc[:,'pathway'].unique()
 df_c2t['region'] = df_c2t['info_1'].apply(lambda x: x[:2])
@@ -36,7 +36,7 @@ df_c2t = df_c2t[(df_c2t['import/domestic']=='I') | (df_c2t['import/domestic']=='
 df_c2t['unit'] = 'kt'
 regions_c2t = df_c2t['region'].unique()
 
-df_tca = pd.read_pickle('data\OSeMBE_TotalCapacityAnnual_DataV3R1_2020-07-09.pkl')
+df_tca = pd.read_pickle('data\OSeMBE_TotalCapacityAnnual_DataV3R1_2020-09-21.pkl')
 pathways_tca = df_tca.loc[:,'pathway'].unique()
 df_tca['region'] = df_tca['info_1'].apply(lambda x: x[:2])
 df_tca['fuel'] = df_tca['info_1'].apply(lambda x: x[2:4])
@@ -247,6 +247,8 @@ def update_graph_1(selected_pathway, selected_region):
     # selected_region = 'CH'
     countr_el1 = selected_region + 'E1'
     countr_el2 = selected_region + 'E2'
+    path_names = {'B1C0T0E0':'REF','B1C0ToE0':'OBS','B1C0TxE0':'CBS'}
+    countries = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Repunlic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','EU28':'EU28'}
     filtered_df = df_eg[
         (df_eg['pathway'] == selected_pathway) 
         & (df_eg['region'] == selected_region) 
@@ -313,7 +315,7 @@ def update_graph_1(selected_pathway, selected_region):
     return {
         'data': traces,
         'layout': dict(
-            title='Electricity generation in {} in scenario {}'.format(selected_region,selected_pathway),
+            title='Electricity generation in {} in scenario {}'.format(countries[selected_region],path_names[selected_pathway]),
             yaxis=dict(title=''.join(info_dict['Y-Axis'])),
             hovermode= 'closest',
             font=dict(family='Aleo'),
@@ -328,6 +330,8 @@ def update_graph_1(selected_pathway, selected_region):
 def update_graph_2(selected_pathway, selected_region):
     countr_el1 = selected_region + 'E1'
     countr_el2 = selected_region + 'E2'
+    path_names = {'B1C0T0E0':'REF','B1C0ToE0':'OBS','B1C0TxE0':'CBS'}
+    countries = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Repunlic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','EU28':'EU28'}
     filtered_df = df_eg[
         (df_eg['pathway'] == selected_pathway) 
         & (df_eg['region'] == selected_region) 
@@ -394,7 +398,7 @@ def update_graph_2(selected_pathway, selected_region):
     return {
         'data': traces,
         'layout': dict(
-            title='Electricity generation in {} in scenario {}'.format(selected_region,selected_pathway),
+            title='Electricity generation in {} in scenario {}'.format(countries[selected_region],path_names[selected_pathway]),
             yaxis=dict(title=''.join(info_dict['Y-Axis'])),
             hovermode= 'closest',
             font=dict(family='Aleo'),
