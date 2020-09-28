@@ -74,10 +74,16 @@ colour_schemes = dict(
         Ocean ='rgb(178, 191, 225)',
         Imports = 'rgb(232, 133, 2)')
     )
+#%% functions for returning positives and negatives
+def positives(value):
+    return max(value, 0)
+def negatives(value):
+    return min(value, 0)
 #%% Function to create dfs with import and export of electricity for selected country
-def impex(data, selected_country):
-    selected_country = 'CH' #for testing
-    data = expanded_df #for testing
+def impex(data, path_names, selected_country):
+    # selected_country = 'DE' #for testing
+    # data = expanded_df #for testing
+    # path_names = path_names #for testing
     df_filtered = data[(data['fuel']=='EL')
                        &((data['region']==selected_country)|(data['tech_type']==selected_country))
                        &(data['tech_type']!='00')]
@@ -87,7 +93,55 @@ def impex(data, selected_country):
     countries = list(dict.fromkeys(countries))
     df_filtered = df_filtered[df_filtered['info_2'].str.contains('|'.join(countries))]
     df_filtered = df_filtered[df_filtered['info_2'].str.contains('E1')]
-    
+    years = pd.Series(df_filtered['year'].unique())
+    paths = pd.Series(df_filtered['pathway'].unique())
+    neighbours = []
+    for i in countries:
+        if i != selected_country:
+            neighbours.append(i)
+    dict_path = {}
+    links = list(df_filtered['info_1'].unique())
+    label_imp = []
+    label_exp = []
+    for n in neighbours:
+        label_imp.append('Import from '+n)
+        label_exp.append('Export to '+n)
+    for j in paths:
+        i = 0
+        net_imp = pd.DataFrame(index=years)
+        for link in links:
+            imp = df_filtered[(df_filtered['pathway']==j)
+                              &(df_filtered['info_1']==link)
+                              &(df_filtered['info_2']==(selected_country+'E1'))]
+            imp = imp.set_index(years)
+            exp = df_filtered[(df_filtered['pathway']==j)
+                              &(df_filtered['info_1']==link)
+                              &(df_filtered['info_2']==(neighbours[i]+'E1'))]
+            exp = exp.set_index(years) 
+            net_imp[link] = imp['value'] - exp['value']
+            i += 1
+        net_imp_pos = pd.DataFrame(index=years,columns=links)
+        net_imp_neg = pd.DataFrame(index=years,columns=links)
+        for link in links:
+            net_imp_pos[link] = net_imp[link].map(positives)
+            net_imp_neg[link] = net_imp[link].map(negatives)
+        net_imp_pos.columns = label_imp
+        net_imp_neg.columns = label_exp
+        dict_path[j] = {}
+        dict_path[j]['imports']=net_imp_pos
+        dict_path[j]['exports']=net_imp_neg
+    path_ind = []
+    year_ind = []
+    df_exports = pd.DataFrame(columns=label_exp)
+    df_imports = pd.DataFrame(columns=label_imp)
+    for year in years:
+        for j in paths:
+            df_exports = df_exports.append(dict_path[j]['exports'].loc[year])
+            df_imports = df_imports.append(dict_path[j]['imports'].loc[year])
+            path_ind.append(path_names[j])
+    df_exports = df_exports.set_index([pd.Index(path_ind, name='paths')],append=True)
+    df_imports = df_imports.set_index([pd.Index(path_ind, name='paths')],append=True)
+    return df_exports, df_imports
 #%% Function to create figure
 
 #%% main
@@ -99,6 +153,7 @@ selec_pkl_file ='data/OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-09-21.pk
 raw_df = read_pkl(selec_pkl_file)
 expanded_df = expand_df(raw_df)
 facts_dic = get_facts(expanded_df)
+path_names = {'B1C0T0E0':'REF','B1C0ToE0':'OBS','B1C0TxE0':'CBS'}
 for region in facts_dic['regions']:
     print(region)
 # selec_region = input('Please select a country from the above listed by typing here:')
