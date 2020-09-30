@@ -143,6 +143,86 @@ def impex(data, path_names, selected_country):
     df_imports = df_imports.set_index([pd.Index(path_ind, name='paths')],append=True)
     return df_exports, df_imports
 #%% Function to create figure
+def create_fig(data, path_names, country_sel, countries_mod, fuels):
+    # data = expanded_df #for testing
+    # country_sel = 'DE' #for testing
+    # path_names = path_names #for testing
+    # countries_mod = countries_mod #for testing
+    fig = go.Figure()
+    fuels = fuels #for testing
+    elexp, elimp = impex(data, path_names, country_sel)
+    elexp = elexp.sum(axis=1)
+    elimp = elimp.sum(axis=1)
+    paths = list(path_names.keys())
+    years = data['year'].unique()
+    coms = fuels['fuel_name']
+    coms = coms[(coms!='EL')&(coms!='OI')]
+    info_dict = {}
+    info_dict['Unit'] = data.loc[:,'unit'].unique()
+    info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
+    countr_el1 = country_sel + 'E1'
+    countr_el2 = country_sel + 'E2'
+    dict_path = {}
+    for path in paths:
+        # path = 'B1C0T0E0' #for testing
+        filtered_df = data[
+        (data['pathway'] == path) 
+        & (data['region'] == country_sel) 
+        & ((data['info_2']==countr_el1)|(data['info_2']==countr_el2)) 
+        & (data['fuel']!='EL') 
+        & (data['tech_type']!='00')]
+        filtered_df['production'] = filtered_df.groupby(['info_1','year'])['value'].transform('sum')
+        filtered_df = filtered_df[filtered_df['info_2']==countr_el2]
+        filtered_df_p = filtered_df.pivot(index='year', columns='tech_spec',  values='production')
+        df_by_com = pd.DataFrame()
+        for com in coms:
+            com_selec = filtered_df_p.filter(regex="\A"+com, axis=1)
+            com_sum = com_selec.sum(axis=1)
+            df_by_com[com] = com_sum
+        dict_path[path] = df_by_com
+    df_fig = pd.DataFrame(columns=coms)
+    path_ind = []
+    year_ind = []
+    for y in years:
+        for p in paths:
+            df_fig = df_fig.append(dict_path[p].loc[y])
+            path_ind.append(path_names[p])
+            year_ind.append(y)
+    df_fig = df_fig.set_index([pd.Index(path_ind, name='paths')],append=True)
+    df_fig['EL'] = elimp
+    coms = coms.append(pd.Series('EL'))
+    for c in coms:
+        temp = fuels.loc[fuels['fuel_name']==c,'fuel_abr']
+        fuel_code = temp.iloc[0]
+        fig.add_trace(go.Bar(
+            y = df_fig.loc[:,c],
+            x = [year_ind,path_ind],
+            name = fuel_code,
+            hovertemplate = 'Power generation: %{y}PJ',
+            marker_color = colours[fuel_code]
+            ))
+    fig.add_trace(go.Bar(
+    y = elexp,
+    x = [year_ind,path_ind],
+    name = 'Exports',
+    hovertemplate = 'Exported electricity: %{y}PJ',
+    marker_color = colours['Imports'],
+    base=0
+    ))
+    fig.update_layout(
+        barmode = 'stack',
+        plot_bgcolor='rgba(0,0,0,0)',
+        title={
+            'text':'Electricity generation in {}'.format(countries_mod[country_sel]),
+            'y':0.95,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'},
+        xaxis = {'type': 'multicategory'},
+        yaxis = dict(title='Electricity in [{}]'.format(info_dict['Y-Axis'][0]))
+        )
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='Black')
+    return fig
 
 #%% main
 pkl_files = get_file_names()
@@ -154,6 +234,9 @@ raw_df = read_pkl(selec_pkl_file)
 expanded_df = expand_df(raw_df)
 facts_dic = get_facts(expanded_df)
 path_names = {'B1C0T0E0':'REF','B1C0ToE0':'OBS','B1C0TxE0':'CBS'}
+countries_mod = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Republic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','EU28':'EU28'}
+fuels = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['Wind','Hydro','Biofuel','Coal','Biomass','Waste','Oil','Nuclear','Gas','Ocean','Oil','Geo','Solar','Imports']}, columns = ['fuel_name','fuel_abr'])
+fuels = fuels.sort_values(['fuel_name'])
 for region in facts_dic['regions']:
     print(region)
 # selec_region = input('Please select a country from the above listed by typing here:')
@@ -162,3 +245,5 @@ print(list(colour_schemes.keys()))
 # selec_scheme = input('Please select one of the above listed colour schemes by writing it here and confirming by enter:')
 selec_scheme = 'dES_colours' 
 colours = colour_schemes[selec_scheme]
+figure = create_fig(expanded_df, path_names, selec_region, countries_mod, fuels)
+plot(figure)
