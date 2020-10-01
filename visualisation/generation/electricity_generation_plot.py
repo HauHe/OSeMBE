@@ -94,7 +94,7 @@ def impex(data, path_names, selected_country):
     df_filtered = df_filtered[df_filtered['info_2'].str.contains('|'.join(countries))]
     df_filtered = df_filtered[df_filtered['info_2'].str.contains('E1')]
     years = pd.Series(df_filtered['year'].unique())
-    paths = pd.Series(df_filtered['pathway'].unique())
+    paths = list(path_names.keys())
     neighbours = []
     for i in countries:
         if i != selected_country:
@@ -233,7 +233,7 @@ selec_pkl_file ='data/OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-09-21.pk
 raw_df = read_pkl(selec_pkl_file)
 expanded_df = expand_df(raw_df)
 facts_dic = get_facts(expanded_df)
-path_names = {'B1C0T0E0':'REF','B1C0ToE0':'OBS','B1C0TxE0':'CBS'}
+path_names = {'B1C0TxE0':'CBS','B1C0T0E0':'REF','B1C0ToE0':'OBS'}
 countries_mod = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Republic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','EU28':'EU28'}
 fuels = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['Wind','Hydro','Biofuel','Coal','Biomass','Waste','Oil','Nuclear','Gas','Ocean','Oil','Geo','Solar','Imports']}, columns = ['fuel_name','fuel_abr'])
 fuels = fuels.sort_values(['fuel_name'])
