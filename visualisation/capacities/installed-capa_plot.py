@@ -12,19 +12,41 @@ import plotly.graph_objs as go
 from plotly.offline import plot
 
 #%%
-def get_file_names():
-    pkl_files = []
-    for root, dirs, files in os.walk("."):
-        for file in files:
-            if file.endswith('.pkl'):
-                pkl_files.append(file)
-    return pkl_files
+# def get_file_names():
+#     pkl_files = []
+#     for root, dirs, files in os.walk("."):
+#         for file in files:
+#             if file.endswith('.pkl'):
+#                 pkl_files.append(file)
+#     return pkl_files
 
-def read_pkl(pkl_name):
-    df = pd.read_pickle(pkl_name)
+# def read_pkl(pkl_name):
+#     df = pd.read_pickle(pkl_name)
+#     return df
+def read_csv(scen, param):
+    df = pd.read_csv('{}/results_csv/{}.csv'.format(scen,param))
+    df['scenario'] = scen
     return df
 
-def expand_df(df):
+def build_dic(scens, params):
+    dic = {}
+    for scen in scens:
+        dic[scen] = {}
+    for scen in scens:
+        for param in params:
+            dic[scen][param] = read_csv(scen, param)
+    return dic
+
+def build_df(dic):
+    dic = results_dic #for testing
+    ls_scen = []
+    ls_param = []
+    df = pd.DataFrame()
+    for i in dic:
+        ls_scen.append(i)
+        for j in dic[i]:
+            ls_param.append(j)
+    
     df['region'] = df['info_1'].apply(lambda x: x[:2])
     df['fuel'] = df['info_1'].apply(lambda x: x[2:4])
     df['tech_type'] = df['info_1'].apply(lambda x: x[4:6])
@@ -207,13 +229,16 @@ colour_schemes = dict(
         Imports = 'rgb(232, 133, 2)')
     )
 #%% main 
-pkl_files = get_file_names()
-for file in pkl_files:
-    print(file)
+# pkl_files = get_file_names()
+# for file in pkl_files:
+#     print(file)
 # selec_pkl_file = input('This script is to visualise installed cpacities. Please select the .pkl file you want to read in. Take care with the spelling!:')
-selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-09-21.pkl'
-raw_df = read_pkl(selec_pkl_file)
-expanded_df = expand_df(raw_df)
+# selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-09-21.pkl'
+# raw_df = read_pkl(selec_pkl_file)
+scens = ['B1C0T0E0']
+params = ['TotalCapacityAnnual']
+results_dic = build_dic(scens, params)
+expanded_df = build_df(results_dic)
 facts_dic = get_facts(expanded_df)
 for path in facts_dic['pathways']:
     print(path)
