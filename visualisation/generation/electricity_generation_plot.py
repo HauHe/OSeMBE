@@ -100,9 +100,9 @@ def negatives(value):
     return min(value, 0)
 #%% Function to create dfs with import and export of electricity for selected country
 def impex(data, path_names, selected_country):
-    selected_country = 'DE' #for testing
-    data = df_PbTA #for testing
-    path_names = path_names #for testing
+    # selected_country = 'DE' #for testing
+    # data = df_PbTA #for testing
+    # path_names = path_names #for testing
     df_filtered = data[(data['fuel']=='EL')
                        &((data['region']==selected_country)|(data['tech_type']==selected_country))
                        &(data['tech_type']!='00')]
@@ -112,7 +112,7 @@ def impex(data, path_names, selected_country):
     countries = list(dict.fromkeys(countries))
     df_filtered = df_filtered[df_filtered['FUEL'].str.contains('|'.join(countries))]
     df_filtered = df_filtered[df_filtered['FUEL'].str.contains('E1')]
-    years = pd.Series(df_filtered['YEAR'].unique())
+    years = pd.Series(df_filtered['YEAR'].unique(),name='YEAR').sort_values()
     paths = list(path_names.keys())
     neighbours = []
     for i in countries:
@@ -132,12 +132,19 @@ def impex(data, path_names, selected_country):
             imp = df_filtered[(df_filtered['pathway']==j)
                               &(df_filtered['TECHNOLOGY']==link)
                               &(df_filtered['FUEL']==(selected_country+'E1'))]
+            if len(imp.index)<5:
+                imp = imp.set_index('YEAR').reindex(years).reset_index().fillna(0)
+                # imp = imp.set_index('YEAR')
+                # imp = imp.reindex(years)
+                # imp = imp.reset_index()
             imp = imp.set_index(years)
             exp = df_filtered[(df_filtered['pathway']==j)
                               &(df_filtered['TECHNOLOGY']==link)
                               &(df_filtered['FUEL']==(neighbours[i]+'E1'))]
+            if len(exp.index)<5:
+                exp = exp.set_index('YEAR').reindex(years).reset_index().fillna(0)
             exp = exp.set_index(years) 
-            net_imp[link] = imp['value'] - exp['value']
+            net_imp[link] = imp['VALUE'] - exp['VALUE']
             i += 1
         net_imp_pos = pd.DataFrame(index=years,columns=links)
         net_imp_neg = pd.DataFrame(index=years,columns=links)
@@ -163,7 +170,7 @@ def impex(data, path_names, selected_country):
     return df_exports, df_imports
 #%% Function to create figure
 def create_fig(data, path_names, country_sel, countries_mod, fuels):
-    # data = expanded_df #for testing
+    # data = df_PbTA #for testing
     # country_sel = 'DE' #for testing
     # path_names = path_names #for testing
     # countries_mod = countries_mod #for testing
@@ -174,6 +181,7 @@ def create_fig(data, path_names, country_sel, countries_mod, fuels):
     elimp = elimp.sum(axis=1)
     paths = list(path_names.keys())
     years = data['YEAR'].unique()
+    years.sort()
     coms = fuels['fuel_name']
     coms = coms[(coms!='EL')&(coms!='OI')]
     info_dict = {}
@@ -190,9 +198,10 @@ def create_fig(data, path_names, country_sel, countries_mod, fuels):
         & ((data['FUEL']==countr_el1)|(data['FUEL']==countr_el2)) 
         & (data['fuel']!='EL') 
         & (data['tech_type']!='00')]
-        filtered_df['production'] = filtered_df.groupby(['TECHNOLOGY','YEAR'])['value'].transform('sum')
-        filtered_df = filtered_df[filtered_df['FUEL']==countr_el2]
-        filtered_df_p = filtered_df.pivot(index='YEAR', columns='tech_spec',  values='production')
+        # filtered_df['production'] = filtered_df.groupby(['TECHNOLOGY','YEAR'])['VALUE'].transform('sum')
+        # filtered_df = filtered_df[filtered_df['FUEL']==countr_el2]
+        # filtered_df_p = filtered_df.pivot(index='YEAR', columns='tech_spec',  values='production')
+        filtered_df_p = filtered_df.pivot(index='YEAR', columns='tech_spec',  values='VALUE')
         df_by_com = pd.DataFrame()
         for com in coms:
             com_selec = filtered_df_p.filter(regex="\A"+com, axis=1)
