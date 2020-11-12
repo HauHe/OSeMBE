@@ -14,6 +14,8 @@ You should also have Python >= 3.6 environment setup with the following dependen
 - `plotly`
 
 ## Folder structure
+- Input data are stored as `datapackages` in the `input_data` folder
+- A modified OSeMOSYS model file is stored in the `model` folder
 
 ## Licensing
 - Data is released under the terms of a CC-BY-4.0 International License Agreement.
