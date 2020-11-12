@@ -9,6 +9,7 @@ The development was funded by the European Union’s Horizon 2020 research and i
 
 ## Licensing
 - Data is released under the terms of a CC-BY-4.0 International License Agreement.
+- A modified copy of OSeMOSYS is redistribruted in this repository under Apache 2.0 license agreement, a copy of which can be found in the model folder
 
 ## Citation
 
