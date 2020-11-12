@@ -7,6 +7,12 @@ An Energy model base for the European Union developed using the **OSeMOSYS** Mod
 The model provides country-detailed representation of the 28 European Union (EU) Member States + Switzerland and Norway. The model aims at being used as a multi-regional stakeholders engagement model at the European level.
 The development was funded by the European Union’s Horizon 2020 research and innovation programme under grant agreement No 691739.
 
+## Setup and Installation
+To run this analysis you need to install GLPK and a solver such as CBC or CPLEX.
+You should also have Python >= 3.6 environment setup with the following dependencies:
+- `pandas`
+- `plotly`
+
 ## Licensing
 - Data is released under the terms of a CC-BY-4.0 International License Agreement.
 - A modified copy of OSeMOSYS is redistribruted in this repository under Apache 2.0 license agreement, a copy of which can be found in the `model` folder
