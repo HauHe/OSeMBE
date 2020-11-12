@@ -25,5 +25,4 @@ If you wish to use, extend or otherwise build upon the work contained within thi
 welcome to do so, provided you abide by the terms of the licenses detailed above.
 
 Please cite this work in the following manner:
-    Henke, H., 2019,
-    The Open Source energy Modelling Base for Europe (OSeMBE)
+    `Henke, H., 2019, The Open Source energy Modelling Base for Europe (OSeMBE)`
