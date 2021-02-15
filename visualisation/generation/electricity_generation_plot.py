@@ -13,26 +13,45 @@ import plotly.graph_objs as go
 from plotly.offline import plot
 
 #%%
-def get_file_names():
-    pkl_files = []
-    for root, dirs, files in os.walk("."):
-        for file in files:
-            if file.endswith('.pkl'):
-                pkl_files.append(file)
-    return pkl_files
+# def get_file_names():
+#     pkl_files = []
+#     for root, dirs, files in os.walk("."):
+#         for file in files:
+#             if file.endswith('.pkl'):
+#                 pkl_files.append(file)
+#     return pkl_files
 
-def read_pkl(pkl_name):
-    df = pd.read_pickle(pkl_name)
+# def read_pkl(pkl_name):
+#     df = pd.read_pickle(pkl_name)
+#     return df
+
+def read_csv(scen, param):
+    df = pd.read_csv('{}/results_csv/{}.csv'.format(scen,param))
+    df['pathway'] = scen
     return df
 
-def expand_df(df):
-    df['region'] = df['info_1'].apply(lambda x: x[:2])
-    df['fuel'] = df['info_1'].apply(lambda x: x[2:4])
-    df['tech_type'] = df['info_1'].apply(lambda x: x[4:6])
-    df['tech_spec'] = df['info_1'].apply(lambda x: x[2:])
+def build_dic(scens, params):
+    dic = {}
+    for scen in scens:
+        dic[scen] = {}
+    for scen in scens:
+        for param in params:
+            dic[scen][param] = read_csv(scen, param)
+    return dic
+
+def build_PbTA_df(dic):
+    # dic = results_dic
+    df = pd.DataFrame(columns=['REGION','TECHNOLOGY','FUEL','YEAR','VALUE','pathway'])
+    for i in dic:
+        df_work = dic[i]['ProductionByTechnologyAnnual']
+        df = df.append(df_work)
+    df['region'] = df['TECHNOLOGY'].apply(lambda x: x[:2])
+    df['fuel'] = df['TECHNOLOGY'].apply(lambda x: x[2:4])
+    df['tech_type'] = df['TECHNOLOGY'].apply(lambda x: x[4:6])
+    df['tech_spec'] = df['TECHNOLOGY'].apply(lambda x: x[2:])
     df = df[(df['fuel']!='OI')
             &(df['tech_type']!='00')
-            &((df['year']=='2015')|(df['year']=='2020')|(df['year']=='2030')|(df['year']=='2040')|(df['year']=='2050'))]
+            &((df['YEAR']==2015)|(df['YEAR']==2020)|(df['YEAR']==2030)|(df['YEAR']==2040)|(df['YEAR']==2050))]
     df['unit'] = 'PJ'
     return df
 
@@ -82,7 +101,7 @@ def negatives(value):
 #%% Function to create dfs with import and export of electricity for selected country
 def impex(data, path_names, selected_country):
     # selected_country = 'DE' #for testing
-    # data = expanded_df #for testing
+    # data = df_PbTA #for testing
     # path_names = path_names #for testing
     df_filtered = data[(data['fuel']=='EL')
                        &((data['region']==selected_country)|(data['tech_type']==selected_country))
@@ -91,16 +110,16 @@ def impex(data, path_names, selected_country):
     countries = list(df_filtered['region'].unique())
     countries.extend(df_filtered['tech_type'].unique())
     countries = list(dict.fromkeys(countries))
-    df_filtered = df_filtered[df_filtered['info_2'].str.contains('|'.join(countries))]
-    df_filtered = df_filtered[df_filtered['info_2'].str.contains('E1')]
-    years = pd.Series(df_filtered['year'].unique())
+    df_filtered = df_filtered[df_filtered['FUEL'].str.contains('|'.join(countries))]
+    df_filtered = df_filtered[df_filtered['FUEL'].str.contains('E1')]
+    years = pd.Series(df_filtered['YEAR'].unique(),name='YEAR').sort_values()
     paths = list(path_names.keys())
     neighbours = []
     for i in countries:
         if i != selected_country:
             neighbours.append(i)
     dict_path = {}
-    links = list(df_filtered['info_1'].unique())
+    links = list(df_filtered['TECHNOLOGY'].unique())
     label_imp = []
     label_exp = []
     for n in neighbours:
@@ -111,14 +130,21 @@ def impex(data, path_names, selected_country):
         net_imp = pd.DataFrame(index=years)
         for link in links:
             imp = df_filtered[(df_filtered['pathway']==j)
-                              &(df_filtered['info_1']==link)
-                              &(df_filtered['info_2']==(selected_country+'E1'))]
+                              &(df_filtered['TECHNOLOGY']==link)
+                              &(df_filtered['FUEL']==(selected_country+'E1'))]
+            if len(imp.index)<5:
+                imp = imp.set_index('YEAR').reindex(years).reset_index().fillna(0)
+                # imp = imp.set_index('YEAR')
+                # imp = imp.reindex(years)
+                # imp = imp.reset_index()
             imp = imp.set_index(years)
             exp = df_filtered[(df_filtered['pathway']==j)
-                              &(df_filtered['info_1']==link)
-                              &(df_filtered['info_2']==(neighbours[i]+'E1'))]
+                              &(df_filtered['TECHNOLOGY']==link)
+                              &(df_filtered['FUEL']==(neighbours[i]+'E1'))]
+            if len(exp.index)<5:
+                exp = exp.set_index('YEAR').reindex(years).reset_index().fillna(0)
             exp = exp.set_index(years) 
-            net_imp[link] = imp['value'] - exp['value']
+            net_imp[link] = imp['VALUE'] - exp['VALUE']
             i += 1
         net_imp_pos = pd.DataFrame(index=years,columns=links)
         net_imp_neg = pd.DataFrame(index=years,columns=links)
@@ -144,7 +170,7 @@ def impex(data, path_names, selected_country):
     return df_exports, df_imports
 #%% Function to create figure
 def create_fig(data, path_names, country_sel, countries_mod, fuels):
-    # data = expanded_df #for testing
+    # data = df_PbTA #for testing
     # country_sel = 'DE' #for testing
     # path_names = path_names #for testing
     # countries_mod = countries_mod #for testing
@@ -154,7 +180,8 @@ def create_fig(data, path_names, country_sel, countries_mod, fuels):
     elexp = elexp.sum(axis=1)
     elimp = elimp.sum(axis=1)
     paths = list(path_names.keys())
-    years = data['year'].unique()
+    years = data['YEAR'].unique()
+    years.sort()
     coms = fuels['fuel_name']
     coms = coms[(coms!='EL')&(coms!='OI')]
     info_dict = {}
@@ -168,12 +195,13 @@ def create_fig(data, path_names, country_sel, countries_mod, fuels):
         filtered_df = data[
         (data['pathway'] == path) 
         & (data['region'] == country_sel) 
-        & ((data['info_2']==countr_el1)|(data['info_2']==countr_el2)) 
+        & ((data['FUEL']==countr_el1)|(data['FUEL']==countr_el2)) 
         & (data['fuel']!='EL') 
         & (data['tech_type']!='00')]
-        filtered_df['production'] = filtered_df.groupby(['info_1','year'])['value'].transform('sum')
-        filtered_df = filtered_df[filtered_df['info_2']==countr_el2]
-        filtered_df_p = filtered_df.pivot(index='year', columns='tech_spec',  values='production')
+        # filtered_df['production'] = filtered_df.groupby(['TECHNOLOGY','YEAR'])['VALUE'].transform('sum')
+        # filtered_df = filtered_df[filtered_df['FUEL']==countr_el2]
+        # filtered_df_p = filtered_df.pivot(index='YEAR', columns='tech_spec',  values='production')
+        filtered_df_p = filtered_df.pivot(index='YEAR', columns='tech_spec',  values='VALUE')
         df_by_com = pd.DataFrame()
         for com in coms:
             com_selec = filtered_df_p.filter(regex="\A"+com, axis=1)
@@ -225,15 +253,19 @@ def create_fig(data, path_names, country_sel, countries_mod, fuels):
     return fig
 
 #%% main
-pkl_files = get_file_names()
-for file in pkl_files:
-    print(file)
-# selec_pkl_file = input('This script is to visualise installed cpacities. Please select the .pkl file you want to read in. Take care with the spelling!:')
-selec_pkl_file ='data/OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-09-21.pkl'
-raw_df = read_pkl(selec_pkl_file)
-expanded_df = expand_df(raw_df)
-facts_dic = get_facts(expanded_df)
-path_names = {'B1C0TxE0':'CBS','B1C0T0E0':'REF','B1C0ToE0':'OBS'}
+# pkl_files = get_file_names()
+# for file in pkl_files:
+#     print(file)
+# # selec_pkl_file = input('This script is to visualise installed cpacities. Please select the .pkl file you want to read in. Take care with the spelling!:')
+# selec_pkl_file ='data/OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-09-21.pkl'
+# raw_df = read_pkl(selec_pkl_file)
+scens = ['B1C0TxE0','B1C0T0E0']
+params = ['ProductionByTechnologyAnnual']
+results_dic = build_dic(scens, params)
+df_PbTA = build_PbTA_df(results_dic)
+# expanded_df = expand_df(raw_df)
+facts_dic = get_facts(df_PbTA)
+path_names = {'B1C0TxE0':'CBS','B1C0T0E0':'REF'} #,'B1C0ToE0':'OBS'}
 countries_mod = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Republic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','EU28':'EU28'}
 fuels = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['Wind','Hydro','Biofuel','Coal','Biomass','Waste','Oil','Nuclear','Gas','Ocean','Oil','Geo','Solar','Imports']}, columns = ['fuel_name','fuel_abr'])
 fuels = fuels.sort_values(['fuel_name'])
@@ -245,5 +277,5 @@ print(list(colour_schemes.keys()))
 # selec_scheme = input('Please select one of the above listed colour schemes by writing it here and confirming by enter:')
 selec_scheme = 'dES_colours' 
 colours = colour_schemes[selec_scheme]
-figure = create_fig(expanded_df, path_names, selec_region, countries_mod, fuels)
+figure = create_fig(df_PbTA, path_names, selec_region, countries_mod, fuels)
 plot(figure)

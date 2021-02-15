@@ -7,28 +7,46 @@ Created on Thu Jun 25 16:35:17 2020
 #Import of required packages
 import numpy as np
 import pandas as pd
-import os
+# import os
 import plotly.graph_objs as go
 from plotly.offline import plot
 
 #%%
-def get_file_names():
-    pkl_files = []
-    for root, dirs, files in os.walk("."):
-        for file in files:
-            if file.endswith('.pkl'):
-                pkl_files.append(file)
-    return pkl_files
+# def get_file_names():
+#     pkl_files = []
+#     for root, dirs, files in os.walk("."):
+#         for file in files:
+#             if file.endswith('.pkl'):
+#                 pkl_files.append(file)
+#     return pkl_files
 
-def read_pkl(pkl_name):
-    df = pd.read_pickle(pkl_name)
+# def read_pkl(pkl_name):
+#     df = pd.read_pickle(pkl_name)
+#     return df
+def read_csv(scen, param):
+    df = pd.read_csv('{}/results_csv/{}.csv'.format(scen,param))
+    df['pathway'] = scen
     return df
 
-def expand_df(df):
-    df['region'] = df['info_1'].apply(lambda x: x[:2])
-    df['fuel'] = df['info_1'].apply(lambda x: x[2:4])
-    df['tech_type'] = df['info_1'].apply(lambda x: x[4:6])
-    df['tech_spec'] = df['info_1'].apply(lambda x: x[2:])
+def build_dic(scens, params):
+    dic = {}
+    for scen in scens:
+        dic[scen] = {}
+    for scen in scens:
+        for param in params:
+            dic[scen][param] = read_csv(scen, param)
+    return dic
+
+def build_TAC_df(dic):
+    # dic = results_dic #for testing
+    df = pd.DataFrame(columns=['REGION','TECHNOLOGY','YEAR','VALUE','pathway'])
+    for i in dic:
+        df_work = dic[i]['TotalCapacityAnnual']
+        df = df.append(df_work)    
+    df['region'] = df['TECHNOLOGY'].apply(lambda x: x[:2])
+    df['fuel'] = df['TECHNOLOGY'].apply(lambda x: x[2:4])
+    df['tech_type'] = df['TECHNOLOGY'].apply(lambda x: x[4:6])
+    df['tech_spec'] = df['TECHNOLOGY'].apply(lambda x: x[2:])
     df = df[((df['fuel']!='EL')&(df['fuel']!='OI')) & (df['tech_type']!='00')]
     df['unit'] = 'GW'
     return df
@@ -41,10 +59,9 @@ def get_facts(df):
     facts_dic['regions'] = np.append(facts_dic['regions'],'EU28')
     return facts_dic
 #%%
-def create_fig(df_exp, country, path):
+def create_fig(df_exp, country):
     fig = go.Figure()
-    # df_exp = expanded_df
-    # path = 'B1C0T0E0'
+    # df_exp = df_TAC
     # country = 'DE'
     years = ['2015','2020','2030','2040','2050']
     path_names = {'B1C0T0E0':'REF','B1C0ToE0':'OBS','B1C0TxE0':'CBS'}
@@ -52,11 +69,11 @@ def create_fig(df_exp, country, path):
     countries = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Republic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','EU28':'EU28'}
     fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['Wind','Hydro','Biofuel','Coal','Biomass','Waste','Oil','Nuclear','Gas','Ocean','Oil','Geo','Solar','Imports']}, columns = ['fuel_name','fuel_abr'])
     fuel_short = fuel_short.sort_values(['fuel_name'])
-    df_sel_year = df_exp[((df_exp['year']==years[0])
-                  |(df_exp['year']==years[1])
-                  |(df_exp['year']==years[2])
-                  |(df_exp['year']==years[3])
-                  |(df_exp['year']==years[4]))]
+    df_sel_year = df_exp[(df_exp['YEAR']==int(years[0]))
+                  |(df_exp['YEAR']==int(years[1]))
+                  |(df_exp['YEAR']==int(years[2]))
+                  |(df_exp['YEAR']==int(years[3]))
+                  |(df_exp['YEAR']==int(years[4]))]
     info_dict = {}
     info_dict['Unit'] = df_sel_year.loc[:,'unit'].unique()
     info_dict['Y-Axis'] = ['{}'.format(*info_dict['Unit'])]
@@ -98,7 +115,7 @@ def create_fig(df_exp, country, path):
             df_p = pd.DataFrame(index=years, columns=techs)
             for year in years:
                 for tech in techs:
-                    df_p.loc[year, tech] = df.loc[(df['year']==year)&(df['tech_spec']==tech), 'value'].sum()
+                    df_p.loc[year, tech] = df.loc[(df['YEAR']==int(year))&(df['tech_spec']==tech), 'VALUE'].sum()
             df_by_com = pd.DataFrame()
             coms = fuel_short['fuel_name']
             coms = coms[(coms!='EL')&(coms!='OI')]
@@ -123,7 +140,7 @@ def create_fig(df_exp, country, path):
             #         ))
         else:
             df = df[df['region'] == country]
-            df_p = df.pivot(index='year', columns='tech_spec',  values='value')
+            df_p = df.pivot(index='YEAR', columns='tech_spec',  values='VALUE')
             techs = list(df_p)
             df_by_com = pd.DataFrame()
             coms = fuel_short['fuel_name']
@@ -138,7 +155,7 @@ def create_fig(df_exp, country, path):
     year_ind =[]
     for year in years:
         for j in paths:                
-            df_blend = df_blend.append(dict_path[j].loc[year])
+            df_blend = df_blend.append(dict_path[j].loc[int(year)])
             path_ind.append(path_names[j])
             year_ind.append(year)
     print(year_ind)
@@ -207,18 +224,17 @@ colour_schemes = dict(
         Imports = 'rgb(232, 133, 2)')
     )
 #%% main 
-pkl_files = get_file_names()
-for file in pkl_files:
-    print(file)
+# pkl_files = get_file_names()
+# for file in pkl_files:
+#     print(file)
 # selec_pkl_file = input('This script is to visualise installed cpacities. Please select the .pkl file you want to read in. Take care with the spelling!:')
-selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-09-21.pkl'
-raw_df = read_pkl(selec_pkl_file)
-expanded_df = expand_df(raw_df)
-facts_dic = get_facts(expanded_df)
-for path in facts_dic['pathways']:
-    print(path)
-# selec_path = input('Please select a pathway from the above listed by typing it here:')
-selec_path = 'B1C0TxE0'
+# selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-09-21.pkl'
+# raw_df = read_pkl(selec_pkl_file)
+scens = ['B1C0T0E0']
+params = ['TotalCapacityAnnual']
+results_dic = build_dic(scens, params)
+df_TAC = build_TAC_df(results_dic)
+facts_dic = get_facts(df_TAC)
 for region in facts_dic['regions']:
     print(region)
 # selec_region = input('Please select a country from the above listed by typing here:')
@@ -227,5 +243,5 @@ print(list(colour_schemes.keys()))
 # selec_scheme = input('Please select one of the above listed colour schemes by writing it here and confirming by enter:')
 selec_scheme = 'dES_colours' 
 colours = colour_schemes[selec_scheme]
-figure, table = create_fig(expanded_df, selec_region, selec_path)
+figure, table = create_fig(df_TAC, selec_region)
 plot(figure)
