@@ -247,7 +247,9 @@ def create_fig(data, path_names, country_sel, countries_mod, fuels):
             'xanchor': 'center',
             'yanchor': 'top'},
         xaxis = {'type': 'multicategory'},
-        yaxis = dict(title='Electricity in [{}]'.format(info_dict['Y-Axis'][0]))
+        yaxis = dict(title='Electricity in [{}]'.format(info_dict['Y-Axis'][0])),
+        font_family = "Arial",
+        font_color = "black"
         )
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='Black')
     return fig
@@ -266,7 +268,7 @@ df_PbTA = build_PbTA_df(results_dic)
 # expanded_df = expand_df(raw_df)
 facts_dic = get_facts(df_PbTA)
 path_names = {'B1C0TxE0':'CBS','B1C0T0E0':'REF'} #,'B1C0ToE0':'OBS'}
-countries_mod = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Republic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','EU28':'EU28'}
+countries_mod = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Republic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','IT':'Italy','LT':'Lithuania','LU':'Luxembourg','LV':'Latvia','MT':'Malta','NL':'Netherlands','NO':'Norway','PL':'Poland','PT':'Portugal','RO':'Romania','SE':'Sweden','SI':'Slovenia','SK':'Slovakia','UK':'United Kingdom','EU28':'EU28'}
 fuels = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['Wind','Hydro','Biofuel','Coal','Biomass','Waste','Oil','Nuclear','Gas','Ocean','Oil','Geo','Solar','Imports']}, columns = ['fuel_name','fuel_abr'])
 fuels = fuels.sort_values(['fuel_name'])
 for region in facts_dic['regions']:
