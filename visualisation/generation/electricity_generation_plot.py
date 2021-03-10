@@ -5,31 +5,19 @@ Created on Fri Sep 25 14:51:38 2020
 @author: haukeh
 """
 
-#Import of required packages
+#%%Import of required packages
 import numpy as np
 import pandas as pd
 import os
 import plotly.graph_objs as go
 from plotly.offline import plot
 
-#%%
-# def get_file_names():
-#     pkl_files = []
-#     for root, dirs, files in os.walk("."):
-#         for file in files:
-#             if file.endswith('.pkl'):
-#                 pkl_files.append(file)
-#     return pkl_files
-
-# def read_pkl(pkl_name):
-#     df = pd.read_pickle(pkl_name)
-#     return df
-
+#%% Function to read results csv files
 def read_csv(scen, param):
     df = pd.read_csv('{}/results_csv/{}.csv'.format(scen,param))
     df['pathway'] = scen
     return df
-
+#%% Function to create dictionaries containing dictionaries for each scenario that contain the results as dataframes
 def build_dic(scens, params):
     dic = {}
     for scen in scens:
@@ -38,7 +26,7 @@ def build_dic(scens, params):
         for param in params:
             dic[scen][param] = read_csv(scen, param)
     return dic
-
+#%% Function to creat a df with the production by technology annual
 def build_PbTA_df(dic):
     # dic = results_dic
     df = pd.DataFrame(columns=['REGION','TECHNOLOGY','FUEL','YEAR','VALUE','pathway'])
@@ -54,7 +42,7 @@ def build_PbTA_df(dic):
             &((df['YEAR']==2015)|(df['YEAR']==2020)|(df['YEAR']==2030)|(df['YEAR']==2040)|(df['YEAR']==2050))]
     df['unit'] = 'PJ'
     return df
-
+#%% Function to create dictionary with information
 def get_facts(df):
     facts_dic = {}
     facts_dic['pathways'] = df.loc[:,'pathway'].unique()
@@ -100,9 +88,6 @@ def negatives(value):
     return min(value, 0)
 #%% Function to create dfs with import and export of electricity for selected country
 def impex(data, path_names, selected_country):
-    # selected_country = 'DE' #for testing
-    # data = df_PbTA #for testing
-    # path_names = path_names #for testing
     df_filtered = data[(data['fuel']=='EL')
                        &((data['region']==selected_country)|(data['tech_type']==selected_country))
                        &(data['tech_type']!='00')]
@@ -134,9 +119,6 @@ def impex(data, path_names, selected_country):
                               &(df_filtered['FUEL']==(selected_country+'E1'))]
             if len(imp.index)<5:
                 imp = imp.set_index('YEAR').reindex(years).reset_index().fillna(0)
-                # imp = imp.set_index('YEAR')
-                # imp = imp.reindex(years)
-                # imp = imp.reset_index()
             imp = imp.set_index(years)
             exp = df_filtered[(df_filtered['pathway']==j)
                               &(df_filtered['TECHNOLOGY']==link)
@@ -170,12 +152,7 @@ def impex(data, path_names, selected_country):
     return df_exports, df_imports
 #%% Function to create figure
 def create_fig(data, path_names, country_sel, countries_mod, fuels):
-    # data = df_PbTA #for testing
-    # country_sel = 'DE' #for testing
-    # path_names = path_names #for testing
-    # countries_mod = countries_mod #for testing
     fig = go.Figure()
-    fuels = fuels #for testing
     elexp, elimp = impex(data, path_names, country_sel)
     elexp = elexp.sum(axis=1)
     elimp = elimp.sum(axis=1)
@@ -191,16 +168,12 @@ def create_fig(data, path_names, country_sel, countries_mod, fuels):
     countr_el2 = country_sel + 'E2'
     dict_path = {}
     for path in paths:
-        # path = 'B1C0T0E0' #for testing
         filtered_df = data[
         (data['pathway'] == path) 
         & (data['region'] == country_sel) 
         & ((data['FUEL']==countr_el1)|(data['FUEL']==countr_el2)) 
         & (data['fuel']!='EL') 
         & (data['tech_type']!='00')]
-        # filtered_df['production'] = filtered_df.groupby(['TECHNOLOGY','YEAR'])['VALUE'].transform('sum')
-        # filtered_df = filtered_df[filtered_df['FUEL']==countr_el2]
-        # filtered_df_p = filtered_df.pivot(index='YEAR', columns='tech_spec',  values='production')
         filtered_df_p = filtered_df.pivot(index='YEAR', columns='tech_spec',  values='VALUE')
         df_by_com = pd.DataFrame()
         for com in coms:
@@ -255,19 +228,12 @@ def create_fig(data, path_names, country_sel, countries_mod, fuels):
     return fig
 
 #%% main
-# pkl_files = get_file_names()
-# for file in pkl_files:
-#     print(file)
-# # selec_pkl_file = input('This script is to visualise installed cpacities. Please select the .pkl file you want to read in. Take care with the spelling!:')
-# selec_pkl_file ='data/OSeMBE_ProductionByTechnologyAnnual_DataV3R1_2020-09-21.pkl'
-# raw_df = read_pkl(selec_pkl_file)
-scens = ['B1C0TxE0','B1C0T0E0']
+scens = ['B1C0TxE0','B1C0T0E0','B1C0ToE0']
 params = ['ProductionByTechnologyAnnual']
 results_dic = build_dic(scens, params)
 df_PbTA = build_PbTA_df(results_dic)
-# expanded_df = expand_df(raw_df)
 facts_dic = get_facts(df_PbTA)
-path_names = {'B1C0TxE0':'CBS','B1C0T0E0':'REF'} #,'B1C0ToE0':'OBS'}
+path_names = {'B1C0TxE0':'CBS','B1C0T0E0':'REF','B1C0ToE0':'OBS'}
 countries_mod = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Republic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','IT':'Italy','LT':'Lithuania','LU':'Luxembourg','LV':'Latvia','MT':'Malta','NL':'Netherlands','NO':'Norway','PL':'Poland','PT':'Portugal','RO':'Romania','SE':'Sweden','SI':'Slovenia','SK':'Slovakia','UK':'United Kingdom','EU28':'EU28'}
 fuels = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['Wind','Hydro','Biofuel','Coal','Biomass','Waste','Oil','Nuclear','Gas','Ocean','Oil','Geo','Solar','Imports']}, columns = ['fuel_name','fuel_abr'])
 fuels = fuels.sort_values(['fuel_name'])
