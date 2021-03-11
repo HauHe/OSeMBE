@@ -9,6 +9,7 @@ Created on Fri Sep 25 14:51:38 2020
 import numpy as np
 import pandas as pd
 import os
+import sys
 import plotly.graph_objs as go
 from plotly.offline import plot
 
@@ -87,7 +88,7 @@ def positives(value):
 def negatives(value):
     return min(value, 0)
 #%% Function to create dfs with import and export of electricity for selected country
-def impex(data, path_names, selected_country):
+def impex(data, paths, selected_country):
     df_filtered = data[(data['fuel']=='EL')
                        &((data['region']==selected_country)|(data['tech_type']==selected_country))
                        &(data['tech_type']!='00')]
@@ -98,7 +99,7 @@ def impex(data, path_names, selected_country):
     df_filtered = df_filtered[df_filtered['FUEL'].str.contains('|'.join(countries))]
     df_filtered = df_filtered[df_filtered['FUEL'].str.contains('E1')]
     years = pd.Series(df_filtered['YEAR'].unique(),name='YEAR').sort_values()
-    paths = list(path_names.keys())
+    #paths = list(path_names.keys())
     neighbours = []
     for i in countries:
         if i != selected_country:
@@ -143,20 +144,22 @@ def impex(data, path_names, selected_country):
     df_exports = pd.DataFrame(columns=label_exp)
     df_imports = pd.DataFrame(columns=label_imp)
     for year in years:
+        i=0
         for j in paths:
             df_exports = df_exports.append(dict_path[j]['exports'].loc[year])
             df_imports = df_imports.append(dict_path[j]['imports'].loc[year])
-            path_ind.append(path_names[j])
+            path_ind.append(paths[i].upper())
+            i+=1
     df_exports = df_exports.set_index([pd.Index(path_ind, name='paths')],append=True)
     df_imports = df_imports.set_index([pd.Index(path_ind, name='paths')],append=True)
     return df_exports, df_imports
 #%% Function to create figure
-def create_fig(data, path_names, country_sel, countries_mod, fuels):
+def create_fig(data, paths, country_sel, countries_mod, fuels, colours):
     fig = go.Figure()
-    elexp, elimp = impex(data, path_names, country_sel)
+    elexp, elimp = impex(data, paths, country_sel)
     elexp = elexp.sum(axis=1)
     elimp = elimp.sum(axis=1)
-    paths = list(path_names.keys())
+    #paths = list(path_names.keys())
     years = data['YEAR'].unique()
     years.sort()
     coms = fuels['fuel_name']
@@ -185,10 +188,12 @@ def create_fig(data, path_names, country_sel, countries_mod, fuels):
     path_ind = []
     year_ind = []
     for y in years:
+        i = 0
         for p in paths:
             df_fig = df_fig.append(dict_path[p].loc[y])
-            path_ind.append(path_names[p])
+            path_ind.append(paths[i].upper())
             year_ind.append(y)
+            i +=1
     df_fig = df_fig.set_index([pd.Index(path_ind, name='paths')],append=True)
     df_fig['EL'] = elimp
     coms = coms.append(pd.Series('EL'))
@@ -227,23 +232,30 @@ def create_fig(data, path_names, country_sel, countries_mod, fuels):
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='Black')
     return fig
 
-#%% main
-scens = ['B1C0TxE0','B1C0T0E0','B1C0ToE0']
-params = ['ProductionByTechnologyAnnual']
-results_dic = build_dic(scens, params)
-df_PbTA = build_PbTA_df(results_dic)
-facts_dic = get_facts(df_PbTA)
-path_names = {'B1C0TxE0':'CBS','B1C0T0E0':'REF','B1C0ToE0':'OBS'}
-countries_mod = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Republic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','IT':'Italy','LT':'Lithuania','LU':'Luxembourg','LV':'Latvia','MT':'Malta','NL':'Netherlands','NO':'Norway','PL':'Poland','PT':'Portugal','RO':'Romania','SE':'Sweden','SI':'Slovenia','SK':'Slovakia','UK':'United Kingdom','EU28':'EU28'}
-fuels = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['Wind','Hydro','Biofuel','Coal','Biomass','Waste','Oil','Nuclear','Gas','Ocean','Oil','Geo','Solar','Imports']}, columns = ['fuel_name','fuel_abr'])
-fuels = fuels.sort_values(['fuel_name'])
-for region in facts_dic['regions']:
-    print(region)
-# selec_region = input('Please select a country from the above listed by typing here:')
-selec_region = 'DE'
-print(list(colour_schemes.keys()))
-# selec_scheme = input('Please select one of the above listed colour schemes by writing it here and confirming by enter:')
-selec_scheme = 'dES_colours' 
-colours = colour_schemes[selec_scheme]
-figure = create_fig(df_PbTA, path_names, selec_region, countries_mod, fuels)
-plot(figure)
+#%% main function to execute the script
+def main(country,scenarios):
+
+    #scens = ['B1C0TxE0','B1C0T0E0','B1C0ToE0']
+    params = ['ProductionByTechnologyAnnual']
+    results_dic = build_dic(scenarios, params)
+    df_PbTA = build_PbTA_df(results_dic)
+    facts_dic = get_facts(df_PbTA)
+    #path_names = {'B1C0TxE0':'CBS','B1C0T0E0':'REF','B1C0ToE0':'OBS'}
+    countries_mod = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Republic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','IT':'Italy','LT':'Lithuania','LU':'Luxembourg','LV':'Latvia','MT':'Malta','NL':'Netherlands','NO':'Norway','PL':'Poland','PT':'Portugal','RO':'Romania','SE':'Sweden','SI':'Slovenia','SK':'Slovakia','UK':'United Kingdom','EU28':'EU28'}
+    fuels = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['Wind','Hydro','Biofuel','Coal','Biomass','Waste','Oil','Nuclear','Gas','Ocean','Oil','Geo','Solar','Imports']}, columns = ['fuel_name','fuel_abr'])
+    fuels = fuels.sort_values(['fuel_name'])
+    for region in facts_dic['regions']:
+        print(region)
+    # selec_region = input('Please select a country from the above listed by typing here:')
+    #selec_region = 'DE'
+    print(list(colour_schemes.keys()))
+    # selec_scheme = input('Please select one of the above listed colour schemes by writing it here and confirming by enter:')
+    selec_scheme = 'dES_colours' 
+    colours = colour_schemes[selec_scheme]
+    figure = create_fig(df_PbTA, scenarios, country, countries_mod, fuels, colours)
+    plot(figure)
+#%% If executed as script
+if __name__ == '__main__':
+    selec_region = sys.argv[1]
+    scens = sys.argv[2:]
+    main(selec_region,scens)
