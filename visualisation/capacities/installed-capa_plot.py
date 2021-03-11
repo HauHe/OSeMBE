@@ -154,9 +154,12 @@ def create_fig(df_exp, country,paths,colours):
         xaxis = {'type': 'multicategory'},
         yaxis = dict(title='Installed power capacity [{}]'.format(info_dict['Y-Axis'][0])),
         font_family = "Arial",
-        font_color = "black"
+        font_color = "black",
+        title_font_size = 32,
+        legend_font_size = 26
         )
-    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='Black')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='Black',title_font_size=26, tickfont_size=22)
+    fig.update_xaxes(tickfont_size=22)
     return fig, df_p
 #%% Dictionary of dictionaries with colour schemes
 colour_schemes = dict(

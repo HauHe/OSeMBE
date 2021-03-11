@@ -219,7 +219,7 @@ def create_fig(data, paths, country_sel, countries_mod, fuels, colours):
         barmode = 'stack',
         plot_bgcolor='rgba(0,0,0,0)',
         title={
-            'text':'Electricity generation in {}'.format(countries_mod[country_sel]),
+            'text':'<b>Electricity generation in {}</b>'.format(countries_mod[country_sel]),
             'y':0.95,
             'x':0.5,
             'xanchor': 'center',
@@ -227,9 +227,12 @@ def create_fig(data, paths, country_sel, countries_mod, fuels, colours):
         xaxis = {'type': 'multicategory'},
         yaxis = dict(title='Electricity in [{}]'.format(info_dict['Y-Axis'][0])),
         font_family = "Arial",
-        font_color = "black"
+        font_color = "black",
+        title_font_size = 32,
+        legend_font_size = 26
         )
-    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='Black')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='Black',title_font_size=26, tickfont_size=22)
+    fig.update_xaxes(tickfont_size=22)
     return fig
 
 #%% main function to execute the script
