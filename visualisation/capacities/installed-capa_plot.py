@@ -4,30 +4,18 @@ Created on Thu Jun 25 16:35:17 2020
 
 @author: haukeh
 """
-#Import of required packages
+#%%Import of required packages
 import numpy as np
 import pandas as pd
-# import os
+import sys
 import plotly.graph_objs as go
 from plotly.offline import plot
-
-#%%
-# def get_file_names():
-#     pkl_files = []
-#     for root, dirs, files in os.walk("."):
-#         for file in files:
-#             if file.endswith('.pkl'):
-#                 pkl_files.append(file)
-#     return pkl_files
-
-# def read_pkl(pkl_name):
-#     df = pd.read_pickle(pkl_name)
-#     return df
+#%% function to read a results csv for given scneario and parameter
 def read_csv(scen, param):
     df = pd.read_csv('{}/results_csv/{}.csv'.format(scen,param))
     df['pathway'] = scen
     return df
-
+#%%function to create a dictionary of dictionaries for each scenario containing dfs for the result parameter
 def build_dic(scens, params):
     dic = {}
     for scen in scens:
@@ -36,9 +24,8 @@ def build_dic(scens, params):
         for param in params:
             dic[scen][param] = read_csv(scen, param)
     return dic
-
+#%% function to shape df as needed for figure generation
 def build_TAC_df(dic):
-    # dic = results_dic #for testing
     df = pd.DataFrame(columns=['REGION','TECHNOLOGY','YEAR','VALUE','pathway'])
     for i in dic:
         df_work = dic[i]['TotalCapacityAnnual']
@@ -50,7 +37,7 @@ def build_TAC_df(dic):
     df = df[((df['fuel']!='EL')&(df['fuel']!='OI')) & (df['tech_type']!='00')]
     df['unit'] = 'GW'
     return df
-
+#%% function generating a dictionary with information on the model
 def get_facts(df):
     facts_dic = {}
     facts_dic['pathways'] = df.loc[:,'pathway'].unique()
@@ -58,15 +45,11 @@ def get_facts(df):
     facts_dic['unit'] = df.loc[:, 'unit'].unique()
     facts_dic['regions'] = np.append(facts_dic['regions'],'EU28')
     return facts_dic
-#%%
-def create_fig(df_exp, country):
+#%% function generating the figure
+def create_fig(df_exp, country,paths,colours):
     fig = go.Figure()
-    # df_exp = df_TAC
-    # country = 'DE'
     years = ['2015','2020','2030','2040','2050']
-    path_names = {'B1C0T0E0':'REF','B1C0ToE0':'OBS','B1C0TxE0':'CBS'}
-    paths = ['B1C0TxE0','B1C0T0E0','B1C0ToE0']
-    countries = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Republic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','EU28':'EU28'}
+    countries = {'AT':'Austria','BE':'Belgium','BG':'Bulgaria','CH':'Switzerland','CY':'Cyrpus','CZ':'Czech Republic','DE':'Germany','DK':'Denmark','EE':'Estonia','ES':'Spain','FI':'Finland','FR':'France','GR':'Greece','HR':'Croatia','HU':'Hungary','IE':'Ireland','IT':'Italy','LT':'Lithuania','LU':'Luxembourg','LV':'Latvia','MT':'Malta','NL':'Netherlands','NO':'Norway','PL':'Poland','PT':'Portugal','RO':'Romania','SE':'Sweden','SI':'Slovenia','SK':'Slovakia','UK':'United Kingdom','EU28':'EU28'}
     fuel_short = pd.DataFrame({'fuel_name':['WI','HY','BF','CO','BM','WS','HF','NU','NG','OC','OI','GO','SO','EL'],'fuel_abr':['Wind','Hydro','Biofuel','Coal','Biomass','Waste','Oil','Nuclear','Gas','Ocean','Oil','Geo','Solar','Imports']}, columns = ['fuel_name','fuel_abr'])
     fuel_short = fuel_short.sort_values(['fuel_name'])
     df_sel_year = df_exp[(df_exp['YEAR']==int(years[0]))
@@ -124,20 +107,6 @@ def create_fig(df_exp, country):
                 com_sum = com_selec.sum(axis=1)
                 df_by_com[com] = com_sum
             dict_path[j] = df_by_com
-    
-            # for i in coms:
-            #     # i = 'BF'
-            #     temp = fuel_short.loc[fuel_short['fuel_name']==i,'fuel_abr']
-            #     fuel_code = temp.iloc[0]
-            #     fig.add_trace(go.Bar(
-            #         x = years,
-            #         y = df_by_com.loc[:,i],
-            #         name=fuel_code,
-            #         # hoverinfo='x+y',
-            #         hovertemplate=
-            #         'Capacity: %{y}GW',
-            #         marker_color=colours[fuel_code]
-            #         ))
         else:
             df = df[df['region'] == country]
             df_p = df.pivot(index='YEAR', columns='tech_spec',  values='VALUE')
@@ -154,13 +123,13 @@ def create_fig(df_exp, country):
     path_ind =[]
     year_ind =[]
     for year in years:
+        i = 0
         for j in paths:                
             df_blend = df_blend.append(dict_path[j].loc[int(year)])
-            path_ind.append(path_names[j])
+            path_ind.append(paths[i].upper())
             year_ind.append(year)
-    print(year_ind)
+            i += 1
     df_blend = df_blend.set_index([pd.Index(path_ind, name='paths')],append=True)
-    
     for i in coms:
         temp = fuel_short.loc[fuel_short['fuel_name']==i,'fuel_abr']
         fuel_code = temp.iloc[0]
@@ -173,7 +142,6 @@ def create_fig(df_exp, country):
             'Capacity: %{y}GW',
             marker_color=colours[fuel_code]
             ))
-        
     fig.update_layout(
         barmode='stack',
         plot_bgcolor='rgba(0,0,0,0)',
@@ -184,14 +152,12 @@ def create_fig(df_exp, country):
             'xanchor': 'center',
             'yanchor': 'top'},
         xaxis = {'type': 'multicategory'},
-        yaxis = dict(title='Installed power capacity [{}]'.format(info_dict['Y-Axis'][0]))
-        # font=dict(
-        #     family="Century Gothic",
-        #     size=16)
+        yaxis = dict(title='Installed power capacity [{}]'.format(info_dict['Y-Axis'][0])),
+        font_family = "Arial",
+        font_color = "black"
         )
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='Black')
     return fig, df_p
-
 #%% Dictionary of dictionaries with colour schemes
 colour_schemes = dict(
     dES_colours = dict(
@@ -223,25 +189,23 @@ colour_schemes = dict(
         Ocean ='rgb(178, 191, 225)',
         Imports = 'rgb(232, 133, 2)')
     )
-#%% main 
-# pkl_files = get_file_names()
-# for file in pkl_files:
-#     print(file)
-# selec_pkl_file = input('This script is to visualise installed cpacities. Please select the .pkl file you want to read in. Take care with the spelling!:')
-# selec_pkl_file = 'OSeMBE_TotalCapacityAnnual_DataV3R1_2020-09-21.pkl'
-# raw_df = read_pkl(selec_pkl_file)
-scens = ['B1C0T0E0']
-params = ['TotalCapacityAnnual']
-results_dic = build_dic(scens, params)
-df_TAC = build_TAC_df(results_dic)
-facts_dic = get_facts(df_TAC)
-for region in facts_dic['regions']:
-    print(region)
-# selec_region = input('Please select a country from the above listed by typing here:')
-selec_region = 'DE'
-print(list(colour_schemes.keys()))
-# selec_scheme = input('Please select one of the above listed colour schemes by writing it here and confirming by enter:')
-selec_scheme = 'dES_colours' 
-colours = colour_schemes[selec_scheme]
-figure, table = create_fig(df_TAC, selec_region)
-plot(figure)
+#%% main function to execute the script
+def main(selec_region,scens):
+    params = ['TotalCapacityAnnual']
+    results_dic = build_dic(scens, params)
+    df_TAC = build_TAC_df(results_dic)
+    facts_dic = get_facts(df_TAC)
+    for region in facts_dic['regions']:
+        print(region)
+    # selec_region = input('Please select a country from the above listed by typing here:')
+    print(list(colour_schemes.keys()))
+    # selec_scheme = input('Please select one of the above listed colour schemes by writing it here and confirming by enter:')
+    selec_scheme = 'dES_colours' 
+    colours = colour_schemes[selec_scheme]
+    figure, table = create_fig(df_TAC, selec_region,scens,colours)
+    plot(figure)
+#%% If executed as script
+if __name__ == '__main__':
+    selec_region = sys.argv[1]
+    scens = sys.argv[2:]
+    main(selec_region,scens)
