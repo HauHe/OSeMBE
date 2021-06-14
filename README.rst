@@ -28,6 +28,11 @@ Folder structure
 - Input data are stored as `datapackages` in the `input_data` folder
 - A modified OSeMOSYS model file is stored in the `model` folder
 
+Documentation
+-------------
+
+A more detailed documentation of OSeMBE can be found here: https://osembe.readthedocs.io/en/latest/
+
 Licensing
 ---------
 - Data is released under the terms of a CC-BY-4.0 International License Agreement.
