@@ -2,8 +2,8 @@ OSeMBE
 ======
 
 .. image:: https://readthedocs.org/projects/osembe/badge/?version=latest
-:target: https://osembe.readthedocs.io/en/latest/?badge=latest
-:alt: Documentation Status
+    :target: https://osembe.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 This repository cotains:
 
