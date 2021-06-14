@@ -1,6 +1,10 @@
 OSeMBE
 ======
 
+.. image:: https://readthedocs.org/projects/osembe/badge/?version=latest
+:target: https://osembe.readthedocs.io/en/latest/?badge=latest
+:alt: Documentation Status
+
 This repository cotains:
 
 The Open Source energy Model Base for the European Union (OSeMBE)
