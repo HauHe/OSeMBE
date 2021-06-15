@@ -12,7 +12,8 @@ The OSeMBE model aims to provide a simple structured, open source European long-
    :maxdepth: 2
    :caption: Contents:
 
+   naming.rst
    countries.rst
    fuels.rst
-   naming.rst
    technologies.rst
+   emissions.rst
