@@ -1,6 +1,9 @@
 OSeMBE - Open Source energy Model Base for the European Union
 =============================================================
 
+.. image:: https://zenodo.org/badge/375290763.svg
+    :target: https://zenodo.org/badge/latestdoi/375290763
+
 .. image:: https://readthedocs.org/projects/osembe/badge/?version=latest
     :target: https://osembe.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
