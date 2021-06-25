@@ -34,6 +34,8 @@ For the visualisation scripts you should have an environment with the following 
 - `pandas`
 - `plotly`
 
+From this model version onwards `Carbon Capture an Storage (CCS)` are available in **OSeMBE**. This makes it necessary that the model can handle negative emissions. Therefore, some minor modifications were necessary to the OSeMOSYS code. To run the model the OSeMOSYS code that can be found `here <>`_ should be used.
+
 Folder structure
 ----------------
 
@@ -54,5 +56,4 @@ Citation
 If you wish to use, extend or otherwise build upon the work contained within this repository, you are
 welcome to do so, provided you abide by the terms of the licenses detailed above.
 
-Please cite this work in the following manner:
-    `Henke, H., 2019, The Open Source energy Modelling Base for Europe (OSeMBE)`
+Please cite this work using the **DOI** indicated above.

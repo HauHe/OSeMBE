@@ -12,6 +12,7 @@ The OSeMBE model aims to provide a simple structured, open source European long-
    :maxdepth: 2
    :caption: Contents:
 
+   run.rst
    naming.rst
    countries.rst
    fuels.rst
