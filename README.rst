@@ -34,7 +34,7 @@ For the visualisation scripts you should have an environment with the following 
 - `pandas`
 - `plotly`
 
-From this model version onwards `Carbon Capture an Storage (CCS)` are available in **OSeMBE**. This makes it necessary that the model can handle negative emissions. Therefore, some minor modifications were necessary to the OSeMOSYS code. To run the model the OSeMOSYS code that can be found `here <>`_ should be used.
+From this model version onwards `Carbon Capture and Storage (CCS)` are available in **OSeMBE**. This makes it necessary that the model can handle negative emissions. Therefore, some minor modifications were necessary to the OSeMOSYS code. To run the model the OSeMOSYS code that can be found `here <https://github.com/HauHe/OSeMOSYS_GNU_MathProg/tree/osembe/src>`_ should be used.
 
 Folder structure
 ----------------
